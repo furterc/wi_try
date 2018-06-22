@@ -46,6 +46,16 @@ PROJECT := witry
 ###############################################################################
 # Objects and Paths
 
+OBJECTS += ./MQTT/MQTTPacket/MQTTConnectClient.o
+OBJECTS += ./MQTT/MQTTPacket/MQTTConnectServer.o
+OBJECTS += ./MQTT/MQTTPacket/MQTTDeserializePublish.o
+OBJECTS += ./MQTT/MQTTPacket/MQTTFormat.o
+OBJECTS += ./MQTT/MQTTPacket/MQTTPacket.o
+OBJECTS += ./MQTT/MQTTPacket/MQTTSerializePublish.o
+OBJECTS += ./MQTT/MQTTPacket/MQTTSubscribeClient.o
+OBJECTS += ./MQTT/MQTTPacket/MQTTSubscribeServer.o
+OBJECTS += ./MQTT/MQTTPacket/MQTTUnsubscribeClient.o
+OBJECTS += ./MQTT/MQTTPacket/MQTTUnsubscribeServer.o
 OBJECTS += ./caboodle.git/src/console.o
 OBJECTS += ./caboodle.git/src/crc.o
 OBJECTS += ./caboodle.git/src/hdlc_framer.o
@@ -652,12 +662,18 @@ OBJECTS += ./mbed-os/targets/TARGET_STM/sleep.o
 OBJECTS += ./mbed-os/targets/TARGET_STM/stm_spi_api.o
 OBJECTS += ./mbed-os/targets/TARGET_STM/trng_api.o
 OBJECTS += ./mbed-os/targets/TARGET_STM/us_ticker.o
+OBJECTS += ./src/esp_wifi.o
 OBJECTS += ./src/main.o
 
 
 INCLUDE_PATHS += -I../
 INCLUDE_PATHS += -I../.
 INCLUDE_PATHS += -I.././.
+INCLUDE_PATHS += -I.././MQTT
+INCLUDE_PATHS += -I.././MQTT/FP
+INCLUDE_PATHS += -I.././MQTT/MQTTPacket
+INCLUDE_PATHS += -I.././MQTT/MQTTPacket/samples
+INCLUDE_PATHS += -I.././MQTT/MQTTPacket/test
 INCLUDE_PATHS += -I.././caboodle.git
 INCLUDE_PATHS += -I.././caboodle.git/include
 INCLUDE_PATHS += -I.././caboodle.git/include/caboodle
@@ -902,6 +918,7 @@ C_FLAGS += -DDEVICE_SERIAL_ASYNCH=1
 C_FLAGS += -DTARGET_STM32F4
 C_FLAGS += -D__CMSIS_RTOS
 C_FLAGS += -D__CORTEX_M4
+C_FLAGS += -DMBED_BUILD_TIMESTAMP=1529694370.83
 C_FLAGS += -DTOOLCHAIN_GCC
 C_FLAGS += -DDEVICE_I2C_ASYNCH=1
 C_FLAGS += -DTARGET_CORTEX_M
@@ -925,7 +942,6 @@ C_FLAGS += -DDEVICE_PORTIN=1
 C_FLAGS += -DDEVICE_LPTICKER=1
 C_FLAGS += -DTARGET_STM
 C_FLAGS += -DDEVICE_SERIAL_FC=1
-C_FLAGS += -DMBED_BUILD_TIMESTAMP=1529670642.69
 C_FLAGS += -DDEVICE_USTICKER=1
 C_FLAGS += -DTARGET_LIKE_MBED
 C_FLAGS += -D__MBED_CMSIS_RTOS_CM
@@ -959,6 +975,7 @@ CXX_FLAGS += -DDEVICE_SERIAL_ASYNCH=1
 CXX_FLAGS += -DTARGET_STM32F4
 CXX_FLAGS += -D__CMSIS_RTOS
 CXX_FLAGS += -D__CORTEX_M4
+CXX_FLAGS += -DMBED_BUILD_TIMESTAMP=1529694370.83
 CXX_FLAGS += -DTOOLCHAIN_GCC
 CXX_FLAGS += -DDEVICE_I2C_ASYNCH=1
 CXX_FLAGS += -DTARGET_CORTEX_M
@@ -982,7 +999,6 @@ CXX_FLAGS += -DDEVICE_PORTIN=1
 CXX_FLAGS += -DDEVICE_LPTICKER=1
 CXX_FLAGS += -DTARGET_STM
 CXX_FLAGS += -DDEVICE_SERIAL_FC=1
-CXX_FLAGS += -DMBED_BUILD_TIMESTAMP=1529670642.69
 CXX_FLAGS += -DDEVICE_USTICKER=1
 CXX_FLAGS += -DTARGET_LIKE_MBED
 CXX_FLAGS += -D__MBED_CMSIS_RTOS_CM
@@ -1022,6 +1038,11 @@ ASM_FLAGS += -I.././caboodle.git
 ASM_FLAGS += -I.././caboodle.git/include
 ASM_FLAGS += -I.././caboodle.git/include/caboodle
 ASM_FLAGS += -I.././caboodle.git/src
+ASM_FLAGS += -I.././MQTT
+ASM_FLAGS += -I.././MQTT/MQTTPacket
+ASM_FLAGS += -I.././MQTT/MQTTPacket/samples
+ASM_FLAGS += -I.././MQTT/MQTTPacket/test
+ASM_FLAGS += -I.././MQTT/FP
 ASM_FLAGS += -I.././eclipse-extras
 ASM_FLAGS += -I.././mbed-os
 ASM_FLAGS += -I.././mbed-os/drivers
