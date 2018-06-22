@@ -1,0 +1,24 @@
+{
+    "config": {
+        "version": "0x00000001",
+        "wifi-ssid": {
+            "help": "WiFi SSID",
+            "value": "\"area51\""
+        },
+        "wifi-password": {
+            "help": "WiFi Password",
+            "value": "\"golf1900\""
+        }
+    },
+    
+    "macros": ["DEBUG_ISR_STACK_USAGE=1", "MBED_HEAP_STATS_ENABLED=1", "MBED_STACK_STATS_ENABLED=1"],
+    "target_overrides": {
+        "*": {
+            "platform.stdio-convert-newlines": "1",
+            "platform.stdio-baud-rate": 115200
+        },
+        "UBLOX_EVK_ODIN_W2": {
+            "target.device_has": ["EMAC"]
+        }
+    }
+}
