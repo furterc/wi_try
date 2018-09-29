@@ -25,15 +25,71 @@
 									
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/.}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/esp8266-driver}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266/ATParser}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/esp8266-driver/ESP8266}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266/ATParser/BufferedSerial}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266/ATParser/BufferedSerial/Buffer}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362/ISM43362}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362/ISM43362/ATParser}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362/ISM43362/ATParser/BufferedSpi}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362/ISM43362/ATParser/BufferedSpi/Buffer}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wizfi310-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wizfi310-driver/WizFi310}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wnc14a2a-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wnc14a2a-driver/WNC14A2AInterface}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wnc14a2a-driver/WNC14A2AInterface/WncControllerK64F}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wnc14a2a-driver/WNC14A2AInterface/WncControllerK64F/WncController}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/mcr20a-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/mcr20a-rf-driver/source}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/mcr20a-rf-driver/mcr20a-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-x-nucleo-idw01m1}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-x-nucleo-idw01m1/SPWFSA01}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-x-nucleo-idw01m1/SPWFSA04}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1/X-NUCLEO-IDS01Ax}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1/SPIRIT1_Library}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1/SPIRIT1_Library/Src}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1/SPIRIT1_Library/Inc}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/Contiki_STM32_Library}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/stm-spirit1-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/atmel-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/atmel-rf-driver/source}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/atmel-rf-driver/atmel-rf-driver}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/inc}&quot;"/>
 								    
@@ -492,15 +548,71 @@
 									
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/.}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/esp8266-driver}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266/ATParser}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/esp8266-driver/ESP8266}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266/ATParser/BufferedSerial}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266/ATParser/BufferedSerial/Buffer}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362/ISM43362}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362/ISM43362/ATParser}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362/ISM43362/ATParser/BufferedSpi}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362/ISM43362/ATParser/BufferedSpi/Buffer}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wizfi310-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wizfi310-driver/WizFi310}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wnc14a2a-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wnc14a2a-driver/WNC14A2AInterface}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wnc14a2a-driver/WNC14A2AInterface/WncControllerK64F}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wnc14a2a-driver/WNC14A2AInterface/WncControllerK64F/WncController}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/mcr20a-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/mcr20a-rf-driver/source}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/mcr20a-rf-driver/mcr20a-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-x-nucleo-idw01m1}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-x-nucleo-idw01m1/SPWFSA01}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-x-nucleo-idw01m1/SPWFSA04}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1/X-NUCLEO-IDS01Ax}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1/SPIRIT1_Library}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1/SPIRIT1_Library/Src}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1/SPIRIT1_Library/Inc}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/Contiki_STM32_Library}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/stm-spirit1-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/atmel-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/atmel-rf-driver/source}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/atmel-rf-driver/atmel-rf-driver}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/inc}&quot;"/>
 								    
@@ -933,6 +1045,8 @@
 								</option>
 								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.496389156" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
 									
+                                    <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
+                                    
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2CSLAVE=1"/>
@@ -959,7 +1073,7 @@
                                     
                                     <listOptionValue builtIn="false" value="__CORTEX_M4"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1529694370.83"/>
+                                    <listOptionValue builtIn="false" value="TARGET_FF_ARDUINO"/>
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
                                     
@@ -997,7 +1111,7 @@
                                     
                                     <listOptionValue builtIn="false" value="TARGET_FAMILY_STM32"/>
                                     
-                                    <listOptionValue builtIn="false" value="TARGET_FF_ARDUINO"/>
+                                    <listOptionValue builtIn="false" value="FEATURE_COMMON_PAL=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_PORTIN=1"/>
                                     
@@ -1005,7 +1119,9 @@
                                     
                                     <listOptionValue builtIn="false" value="TARGET_STM"/>
                                     
-                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
+                                    <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
+                                    
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1538250016.83"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_USTICKER=1"/>
                                     
@@ -1035,6 +1151,8 @@
                                     
                                     <listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
                                     
+                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
+                                    
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.869095164" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
@@ -1043,15 +1161,71 @@
 									
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/.}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/esp8266-driver}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266/ATParser}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/esp8266-driver/ESP8266}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266/ATParser/BufferedSerial}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266/ATParser/BufferedSerial/Buffer}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362/ISM43362}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362/ISM43362/ATParser}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362/ISM43362/ATParser/BufferedSpi}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-ism43362/ISM43362/ATParser/BufferedSpi/Buffer}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wizfi310-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wizfi310-driver/WizFi310}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wnc14a2a-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wnc14a2a-driver/WNC14A2AInterface}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wnc14a2a-driver/WNC14A2AInterface/WncControllerK64F}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wnc14a2a-driver/WNC14A2AInterface/WncControllerK64F/WncController}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/mcr20a-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/mcr20a-rf-driver/source}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/mcr20a-rf-driver/mcr20a-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-x-nucleo-idw01m1}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-x-nucleo-idw01m1/SPWFSA01}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/wifi-x-nucleo-idw01m1/SPWFSA04}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1/X-NUCLEO-IDS01Ax}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1/SPIRIT1_Library}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1/SPIRIT1_Library/Src}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/spirit1/SPIRIT1_Library/Inc}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/source/libs/Contiki_STM32_Library}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/stm-spirit1-rf-driver/stm-spirit1-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/atmel-rf-driver}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/atmel-rf-driver/source}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/atmel-rf-driver/atmel-rf-driver}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/inc}&quot;"/>
 								    
@@ -1484,6 +1658,8 @@
 								</option>
 								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.1395532696" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
 									
+                                    <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
+                                    
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2CSLAVE=1"/>
@@ -1510,7 +1686,7 @@
                                     
                                     <listOptionValue builtIn="false" value="__CORTEX_M4"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1529694370.83"/>
+                                    <listOptionValue builtIn="false" value="TARGET_FF_ARDUINO"/>
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
                                     
@@ -1548,7 +1724,7 @@
                                     
                                     <listOptionValue builtIn="false" value="TARGET_FAMILY_STM32"/>
                                     
-                                    <listOptionValue builtIn="false" value="TARGET_FF_ARDUINO"/>
+                                    <listOptionValue builtIn="false" value="FEATURE_COMMON_PAL=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_PORTIN=1"/>
                                     
@@ -1556,7 +1732,9 @@
                                     
                                     <listOptionValue builtIn="false" value="TARGET_STM"/>
                                     
-                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
+                                    <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
+                                    
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1538250016.83"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_USTICKER=1"/>
                                     
@@ -1585,6 +1763,8 @@
                                     <listOptionValue builtIn="false" value="TARGET_STM32F411RE"/>
                                     
                                     <listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
+                                    
+                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
                                     
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1704200665" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
