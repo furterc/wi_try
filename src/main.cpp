@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <console.h>
 #include <Serial.h>
+#include <string.h>
 
 #include "utils.h"
 
@@ -14,6 +15,10 @@
 
 #include "mqtt_interface.h"
 #include "DHT22.h"
+#include "picojson.h"
+#include "MQTTNetwork.h"
+#include "MQTTmbed.h"
+#include "MQTTClient.h"
 
 /* Console */
 Serial pc(SERIAL_TX, SERIAL_RX, 115200);
@@ -43,12 +48,23 @@ void messageArrived(MQTT::MessageData& md)
 
 void scanWiFi(int argc,char *argv[])
 {
-//	MQTT_Interface::send();
+	picojson::object v;
+	    picojson::object inner;
+	    string val = "tt";
+
+	    v["aa"] = picojson::value(val);
+	    v["bb"] = picojson::value(1.66);
+	    inner["test"] =  picojson::value(true);
+	    inner["integer"] =  picojson::value(1.0);
+	    v["inner"] =  picojson::value(inner);
+
+	    string str = picojson::value(v).serialize();
+	    printf("serialized content = %s\r\n" ,  str.c_str());
 }
 
 void wifiConnect(int argc,char *argv[])
 {
-	MQTT_Interface::connect();
+//	MQTT_Interface::connect();
 }
 
 HAL_StatusTypeDef sample_dht22(uint16_t &temp, uint16_t &humid)
@@ -100,17 +116,22 @@ int main()
 
 	Console::init(&pc, "wi_try");
 
+
+
 	network = easy_connect(true);
 	if (!network) {
 		printf(RED("Network Not Connected\n"));
 	}
 	else
 	{
-		MQTT_Interface::init(network);
-		MQTT_Interface::connect();
+
 		printf(GREEN("Network Connected\n"));
 	}
 
+	MQTTNetwork mqttNetwork(network);
+	MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
+	MQTT_Interface::init(&mqttNetwork, &client);
+	MQTT_Interface::connect();
     while (1)
 	{
     	wait(10);
@@ -121,13 +142,15 @@ int main()
     	printf("humidity: %d\n", humid);
     	if(MQTT_Interface::isConnected())
     	{
-    		uint8_t buf[4];
-    		buf[0] |= (temp >> 8) & 0xFF;
-    		buf[1] |= temp & 0xFF;
-    		buf[2] |= (humid >> 8) & 0xFF;
-    		buf[3] |= humid & 0xFF;
-//    		printf("temp: %")
-    		MQTT_Interface::send(buf, 4);
+    		picojson::object v;
+    		picojson::object inner;
+    		v["temp"] = picojson::value((double)(temp));
+    		v["humid"] = picojson::value((double)humid);
+
+    		string str = picojson::value(v).serialize();
+    		printf("serialized content = %s\r\n" ,  str.c_str());
+
+    		MQTT_Interface::send((uint8_t *)str.c_str(), strlen(str.c_str()));
     	}
 	}
 

@@ -13,7 +13,7 @@ MQTT_Interface *MQTT_Interface::__instance = 0;
 
 
 
-MQTT_Interface::MQTT_Interface(NetworkInterface* network) : mMQTTNetwork(network), client(mMQTTNetwork), work(osPriorityLow, OS_STACK_SIZE, NULL, "mqttInterface")
+MQTT_Interface::MQTT_Interface(MQTTNetwork* network, MQTT::Client<MQTTNetwork, Countdown> *client) : mMQTTNetwork(network), mClient(client), work(osPriorityLow, OS_STACK_SIZE, NULL, "mqttInterface")
 {
     work.start(callback(run, this));
     state = MQTT_IDLE;
@@ -24,10 +24,10 @@ MQTT_Interface::~MQTT_Interface()
 
 }
 
-void MQTT_Interface::init(NetworkInterface* network)
+void MQTT_Interface::init(MQTTNetwork* network, MQTT::Client<MQTTNetwork, Countdown> *client)
 {
     if(!__instance)
-        __instance = new MQTT_Interface(network);
+        __instance = new MQTT_Interface(network, client);
 }
 
 void MQTT_Interface::connect()
@@ -42,7 +42,7 @@ void MQTT_Interface::connect()
 
 bool MQTT_Interface::isConnected()
 {
-	return __instance->client.isConnected();
+	return __instance->mClient->isConnected();
 
 }
 
@@ -59,7 +59,8 @@ void MQTT_Interface::send(uint8_t *buf, int len)
 	message.payloadlen = len;
 
 	const char* topic = "mbed";
-	int rc = __instance->client.publish(topic, message);
+	int rc = __instance->mClient->publish(topic, message);
+	printf("MQTT: Publish: %d\n", rc);
 	//	while (arrivedcount < 1)
 	//		client->yield(100);
 
@@ -87,7 +88,7 @@ void MQTT_Interface::run(MQTT_Interface *instance)
 
 	while(__instance)
 	{
-		wait(0.1);
+		wait(1);
 		switch(__instance->state)
 		{
 		case MQTT_UNKNOWN:
@@ -99,7 +100,7 @@ void MQTT_Interface::run(MQTT_Interface *instance)
 			const char* hostname = "10.0.0.174";
 			int port = 1883;
 			printf("Connecting to %s:%d\r\n", hostname, port);
-			int rc = __instance->mMQTTNetwork.connect(hostname, port);
+			int rc = __instance->mMQTTNetwork->connect(hostname, port);
 			printf("1\n");
 			if (rc != 0)
 				printf("rc from TCP connect is %d\r\n", rc);
@@ -110,12 +111,12 @@ void MQTT_Interface::run(MQTT_Interface *instance)
 			data.clientID.cstring = (char*)"mbed-sample";
 			//	    data.username.cstring = "testuser";
 			//	    data.password.cstring = "testpassword";
-			if ((rc = __instance->client.connect(data)) != 0)
+			if ((rc = __instance->mClient->connect(data)) != 0)
 				printf("rc from MQTT connect is %d\r\n", rc);
 
 			printf("3\n");
 			const char* topic = "mbed";
-			if ((rc = __instance->client.subscribe(topic, MQTT::QOS2, messageArrived)) != 0)
+			if ((rc = __instance->mClient->subscribe(topic, MQTT::QOS2, messageArrived)) != 0)
 				printf("rc from MQTT subscribe is %d\r\n", rc);
 
 			__instance->state = MQTT_IDLE;
@@ -138,7 +139,8 @@ void MQTT_Interface::run(MQTT_Interface *instance)
 			message.payloadlen = 2;
 
 			const char* topic = "mbed";
-			int rc = __instance->client.publish(topic, message);
+			int rc = __instance->mClient->publish(topic, message);
+			printf("MQTT: Publish: %d\n", rc);
 			//	while (arrivedcount < 1)
 			//		client->yield(100);
 
@@ -147,7 +149,7 @@ void MQTT_Interface::run(MQTT_Interface *instance)
 		}break;
 		case MQTT_IDLE:
 		{
-			__instance->client.yield(100);
+			__instance->mClient->yield(30000);
 		}break;
 		default:
 			break;

@@ -27,18 +27,19 @@ enum eMQTTInterface_state {
 class MQTT_Interface {
 	static MQTT_Interface *__instance;
 
-	MQTT_Interface(NetworkInterface* network);
+	MQTT_Interface(MQTTNetwork* network, MQTT::Client<MQTTNetwork, Countdown> *client);
 
 	eMQTTInterface_state state;
-	MQTTNetwork mMQTTNetwork;
-	MQTT::Client<MQTTNetwork, Countdown> client;
+
+	MQTTNetwork *mMQTTNetwork;
+	MQTT::Client<MQTTNetwork, Countdown> *mClient;
 
 	rtos::Thread work;
 public:
 	virtual ~MQTT_Interface();
 
 
-    static void init(NetworkInterface* network);
+    static void init(MQTTNetwork* network, MQTT::Client<MQTTNetwork, Countdown> *client);
     static void connect();
     static bool isConnected();
     static void send(uint8_t *buf, int len);

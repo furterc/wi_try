@@ -25,6 +25,8 @@
 									
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/.}&quot;"/>
 								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/picojson}&quot;"/>
+								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect/esp8266-driver}&quot;"/>
@@ -547,6 +549,8 @@
 								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1406944528" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
 									
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/.}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/picojson}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect}&quot;"/>
 								    
@@ -1115,13 +1119,15 @@
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_PORTIN=1"/>
                                     
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1538255078.32"/>
+                                    
                                     <listOptionValue builtIn="false" value="DEVICE_LPTICKER=1"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_STM"/>
                                     
                                     <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1538250016.83"/>
+                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_USTICKER=1"/>
                                     
@@ -1151,8 +1157,6 @@
                                     
                                     <listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
                                     
-                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
-                                    
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.869095164" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
@@ -1160,6 +1164,8 @@
 								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.867151072" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
 									
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/.}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/picojson}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/easy-connect}&quot;"/>
 								    
@@ -1728,13 +1734,15 @@
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_PORTIN=1"/>
                                     
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1538255078.32"/>
+                                    
                                     <listOptionValue builtIn="false" value="DEVICE_LPTICKER=1"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_STM"/>
                                     
                                     <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1538250016.83"/>
+                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_USTICKER=1"/>
                                     
@@ -1763,8 +1771,6 @@
                                     <listOptionValue builtIn="false" value="TARGET_STM32F411RE"/>
                                     
                                     <listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
-                                    
-                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
                                     
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1704200665" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
