@@ -9,7 +9,7 @@
 #define SRC_MQTT_INTERFACE_H_
 
 #include "mbed.h"
-#include "easy-connect.h"
+//#include "easy-connect.h"
 #include "MQTTNetwork.h"
 #include "MQTTmbed.h"
 #include "MQTTClient.h"

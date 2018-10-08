@@ -11,14 +11,25 @@
 
 #define MQTTCLIENT_QOS2 1
 
-#include "easy-connect.h"
-
 #include "mqtt_interface.h"
 #include "DHT22.h"
 #include "picojson.h"
 #include "MQTTNetwork.h"
 #include "MQTTmbed.h"
 #include "MQTTClient.h"
+
+#include "TCPSocket.h"
+#include "ESP8266Interface.h"
+#include "EEP24xx16.h"
+
+#include "nvm_config.h"
+
+
+ESP8266Interface wifi(D8, D2);
+TCPSocket socket;
+
+EEP24xx16 *eeprom = 0;
+
 
 /* Console */
 Serial pc(SERIAL_TX, SERIAL_RX, 115200);
@@ -29,7 +40,7 @@ NetworkInterface* network = 0;
 bool networkAvailable = false;
 int arrivedcount = 0;
 
-MQTTNetwork *mqttNetwork = 0;
+//MQTTNetwork *mqttNetwork = 0;
 
 MQTT::Client<MQTTNetwork, Countdown> *client = 0;
 float version = 0.6;
@@ -37,34 +48,25 @@ const char* topic = "mbed";
 
 DHT22 *dht22 = 0;
 
-
-void messageArrived(MQTT::MessageData& md)
-{
-    MQTT::Message &message = md.message;
-    logMessage("Message arrived: qos %d, retained %d, dup %d, packetid %d\r\n", message.qos, message.retained, message.dup, message.id);
-    logMessage("Payload %.*s\r\n", message.payloadlen, (char*)message.payload);
-    ++arrivedcount;
-}
-
 void scanWiFi(int argc,char *argv[])
 {
-	picojson::object v;
-	    picojson::object inner;
-	    string val = "tt";
-
-	    v["aa"] = picojson::value(val);
-	    v["bb"] = picojson::value(1.66);
-	    inner["test"] =  picojson::value(true);
-	    inner["integer"] =  picojson::value(1.0);
-	    v["inner"] =  picojson::value(inner);
-
-	    string str = picojson::value(v).serialize();
-	    printf("serialized content = %s\r\n" ,  str.c_str());
+//	picojson::object v;
+//	picojson::object inner;
+//	string val = "tt";
+//
+//	v["aa"] = picojson::value(val);
+//	v["bb"] = picojson::value(1.66);
+//	inner["test"] =  picojson::value(true);
+//	inner["integer"] =  picojson::value(1.0);
+//	v["inner"] =  picojson::value(inner);
+//
+//	string str = picojson::value(v).serialize();
+//	printf("serialized content = %s\r\n" ,  str.c_str());
 }
 
 void wifiConnect(int argc,char *argv[])
 {
-//	MQTT_Interface::connect();
+
 }
 
 HAL_StatusTypeDef sample_dht22(uint16_t &temp, uint16_t &humid)
@@ -84,73 +86,180 @@ void sensorSample(int argc,char *argv[])
 	uint16_t temp = 0;
 	uint16_t humid = 0;
 	sample_dht22(temp, humid);
-	printf("temperature: %d\n", temp);
-	printf("humidity: %d\n", humid);
-
+	printf("temperature: %d'c\n", temp);
+	printf("humidity   : %d%\n", humid);
 }
 
 const Console::cmd_list_t mainCommands[] =
 {
       {"MAIN"    ,0,0,0},
-      {"ws",     "",                   "Scan for WiFi Devices", scanWiFi},
-	  {"mc",     "",                   "MQTT Connect", wifiConnect},
-	  {"ss",     "",                   "Sample Sensors", sensorSample},
+      {"ws",            "",                   "Scan for WiFi Devices", scanWiFi},
+	  {"mc",            "",                   "MQTT Connect", wifiConnect},
+	  {"ss",            "",                   "Sample Sensors", sensorSample},
       {0,0,0,0}
+};
+
+const Console::cmd_list_t configureCommands[] =
+{
+        {"Configure"    ,0,0,0},
+        {"wifiid",       "",  "Set the WiFi SSID", NvmConfig::wifiSSIDConfig},
+        {"wifipw",       "",  "Set the WiFi Password", NvmConfig::wifiPasswordConfig},
+        {0,0,0,0}
 };
 
 Console::cmd_list_t *Console::mCmdTable[] =
 {
         (cmd_list_t*)shellCommands,
 		(cmd_list_t*)mainCommands,
+		(cmd_list_t*)configureCommands,
         0
 };
 
+void printWifiInfo()
+{
+    printInfo("MAC");
+    printf("%s\n", wifi.get_mac_address());
+    printInfo("IP");
+    printf("%s\n", wifi.get_ip_address());
+    printInfo("Netmask");
+    printf("%s\n", wifi.get_netmask());
+    printInfo("Gateway");
+    printf("%s\n", wifi.get_gateway());
+    printInfo("RSSI");
+    printf("%d\n", wifi.get_rssi());
+}
+
+void messageIn(MQTT::MessageData& md)
+{
+    MQTT::Message &message = md.message;
+    printInfo(GREEN("MQTT MSG IN"));
+    printf("qos %d, retained %d, dup %d, packetid %d\n", message.qos, message.retained, message.dup, message.id);
+    printInfo("MSG PAYLOAD");
+    printf("%.*s\n", message.payloadlen, (char*)message.payload);
+}
 
 int main()
 {
 	printf("\n\nWiTry Demo\n");
-	printf("Version: 0x%08X\n", MBED_CONF_APP_VERSION);
-	printf("Build  : %s\n\n", SWdatetime);
+
+	printInfo("Version");
+	printf("0x%08X\n", MBED_CONF_APP_VERSION);
+
+	printInfo("Build");
+	printf("%s\n\n", SWdatetime);
 
 	dht22 = new DHT22(A0);
 
 	Console::init(&pc, "wi_try");
+	wait(1);
 
+	printf(CYAN_B("\nWiFi example\n\n"));
 
+	printInfo("EEPROM");
+	eeprom = new EEP24xx16(D14, D15);
+	if(!eeprom->getMemorySize())
+	    printf(RED("FAIL\n"));
+	else
+	{
+        printf(GREEN("OK\n"));
+        NvmConfig::init(eeprom);
+	}
 
-	network = easy_connect(true);
-	if (!network) {
-		printf(RED("Network Not Connected\n"));
+	sNetworkCredentials_t wifiCredentials;
+	NvmConfig::getWifiCredentials(&wifiCredentials);
+
+	printInfo("WIFI");
+	printf(GREEN("Connecting...\n"));
+	int ret = wifi.connect(wifiCredentials.wifi_ssid, wifiCredentials.wifi_pw, NSAPI_SECURITY_WPA_WPA2);
+
+	printInfo("WIFI Connection");
+	if (ret != 0) {
+	    printf(RED("FAIL\n"));
+	    return -1;
+	}
+	printf(GREEN("OK\n"));
+
+	printWifiInfo();
+
+	MQTTNetwork mqttNetwork(&wifi);
+	MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
+	int rc = mqttNetwork.connect("10.0.0.174", 1883);
+
+	printInfo("MQTT CONNECT");
+	if(!rc)
+	{
+	    printf(GREEN("OK\n"));
 	}
 	else
 	{
-
-		printf(GREEN("Network Connected\n"));
+	    printf(RED("FAIL\n"));
 	}
 
-	MQTTNetwork mqttNetwork(network);
-	MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
-	MQTT_Interface::init(&mqttNetwork, &client);
-	MQTT_Interface::connect();
+	MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
+	data.MQTTVersion = 3;
+	data.clientID.cstring = (char*)"mbed-sample";
+	//      data.username.cstring = "testuser";
+	//      data.password.cstring = "testpassword";
+	if ((rc = client.connect(data)) != 0)
+	    printf("rc from MQTT connect is %d\r\n", rc);
+
+	const char* topic = "mbed";
+	printInfo("MQTT Sub Topic");
+	printf("%s : ", topic);
+	if ((rc = client.subscribe(topic, MQTT::QOS2, messageIn)) != 0)
+	    printf(RED("FAIL\n"));
+	else
+	    printf(GREEN("OK\n"));
+
+
+//	MQTT_Interface::init(&mqttNetwork, &client);
+//	MQTT_Interface::connect();
+
+    MQTT::Message message;
+
     while (1)
 	{
-    	wait(10);
-    	uint16_t temp = 0;
-    	uint16_t humid = 0;
-    	sample_dht22(temp, humid);
-    	printf("temperature: %d\n", temp);
-    	printf("humidity: %d\n", humid);
-    	if(MQTT_Interface::isConnected())
+        static int inCount = 1200;
+
+        inCount++;
+        wait(0.5);
+    	client.yield(3000);
+
+    	if(inCount > 1200)
     	{
-    		picojson::object v;
-    		picojson::object inner;
-    		v["temp"] = picojson::value((double)(temp));
-    		v["humid"] = picojson::value((double)humid);
+    	    inCount = 0;
+    	    if(MQTT_Interface::isConnected())
+    	    {
+    	        uint16_t temp = 0;
+    	        uint16_t humid = 0;
+    	        sample_dht22(temp, humid);
+    	        printInfo("Temperature");
+    	        printf("%d\n", temp);
+    	        printInfo("Humidity");
+    	        printf("%d\n", humid);
+    	        picojson::object v;
+    	        picojson::object inner;
+    	        v["temp"] = picojson::value((double)(temp));
+    	        v["humid"] = picojson::value((double)humid);
 
-    		string str = picojson::value(v).serialize();
-    		printf("serialized content = %s\r\n" ,  str.c_str());
+    	        string str = picojson::value(v).serialize();
+    	        printInfo("JSON out");
+    	        printf("%s\n" ,  str.c_str());
 
-    		MQTT_Interface::send((uint8_t *)str.c_str(), strlen(str.c_str()));
+
+    	        message.qos = MQTT::QOS0;
+    	        message.retained = false;
+    	        message.dup = false;
+    	        message.payload = (void*)str.c_str();
+    	        message.payloadlen = strlen(str.c_str());
+
+    	        printInfo("MQTT Publish");
+    	        if(client.publish(topic, message))
+    	            printf(RED("FAIL\n"));
+    	        else
+    	            printf(GREEN("OK\n"));
+//    	        MQTT_Interface::send((uint8_t *)str.c_str(), strlen(str.c_str()));
+    	    }
     	}
 	}
 

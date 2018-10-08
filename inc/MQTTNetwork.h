@@ -7,6 +7,7 @@ class MQTTNetwork {
 public:
     MQTTNetwork(NetworkInterface* aNetwork) : network(aNetwork) {
         socket = new TCPSocket();
+        socket->set_blocking(false);
     }
 
     ~MQTTNetwork() {
