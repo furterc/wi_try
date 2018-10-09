@@ -39,8 +39,12 @@ public:
     static int setWifiCredentials(sNetworkCredentials_t *credentials);
     static int getWifiCredentials(sNetworkCredentials_t *credentials);
 
+    static bool checkIp(char* ip);
+
     static void wifiSSIDConfig(int argc,char *argv[]);
     static void wifiPasswordConfig(int argc,char *argv[]);
+    static void mqttIPConfig(int argc,char *argv[]);
+    static void mqttPortConfig(int argc,char *argv[]);
 };
 
 

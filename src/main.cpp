@@ -87,7 +87,7 @@ void sensorSample(int argc,char *argv[])
 	uint16_t humid = 0;
 	sample_dht22(temp, humid);
 	printf("temperature: %d'c\n", temp);
-	printf("humidity   : %d%\n", humid);
+	printf("humidity   : %d\n", humid);
 }
 
 const Console::cmd_list_t mainCommands[] =
@@ -102,8 +102,10 @@ const Console::cmd_list_t mainCommands[] =
 const Console::cmd_list_t configureCommands[] =
 {
         {"Configure"    ,0,0,0},
-        {"wifiid",       "",  "Set the WiFi SSID", NvmConfig::wifiSSIDConfig},
-        {"wifipw",       "",  "Set the WiFi Password", NvmConfig::wifiPasswordConfig},
+        {"wid",       "",  "Set the WiFi SSID", NvmConfig::wifiSSIDConfig},
+        {"wpw",       "",  "Set the WiFi Password", NvmConfig::wifiPasswordConfig},
+        {"mip",       "",  "Set the MQTT IP", NvmConfig::mqttIPConfig},
+        {"mp",        "",  "Set the MQTT Port", NvmConfig::mqttPortConfig},
         {0,0,0,0}
 };
 
@@ -129,13 +131,38 @@ void printWifiInfo()
     printf("%d\n", wifi.get_rssi());
 }
 
-void messageIn(MQTT::MessageData& md)
+    static picojson::value v;
+    static char msg[128];
+    const char *msgP = (const char *)msg;
+
+    void messageIn(MQTT::MessageData& md)
 {
     MQTT::Message &message = md.message;
+    printf("\n");
     printInfo(GREEN("MQTT MSG IN"));
     printf("qos %d, retained %d, dup %d, packetid %d\n", message.qos, message.retained, message.dup, message.id);
     printInfo("MSG PAYLOAD");
     printf("%.*s\n", message.payloadlen, (char*)message.payload);
+
+//    memcpy(msg, message.payload, message.payloadlen);
+//    msg[message.payloadlen] = '\0';
+//
+//
+//    string err = picojson::parse(v, msgP, msgP + strlen(msgP));
+
+//    void *result = err;
+//
+//    if(result)
+//        printf("res error? %s\r\n", err.c_str());
+//
+//    result =
+
+//    printf("year =%s\r\n" ,  v.get("humid").get<string>().c_str());
+//    printf("month =%s\r\n" ,  v.get("month").get<string>().c_str());
+//    printf("day =%s\r\n" ,  v.get("day").get<string>().c_str());
+//    printf("hour =%s\r\n" ,  v.get("hour").get<string>().c_str());
+//    printf("minute =%s\r\n" ,  v.get("minute").get<string>().c_str());
+
 }
 
 int main()
@@ -165,7 +192,7 @@ int main()
         NvmConfig::init(eeprom);
 	}
 
-	sNetworkCredentials_t wifiCredentials;
+	static sNetworkCredentials_t wifiCredentials;
 	NvmConfig::getWifiCredentials(&wifiCredentials);
 
 	printInfo("WIFI");
@@ -183,8 +210,11 @@ int main()
 
 	MQTTNetwork mqttNetwork(&wifi);
 	MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
-	int rc = mqttNetwork.connect("10.0.0.174", 1883);
 
+	printInfo("MQTT CONNECT");
+	printf("%s:%d\n", wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
+
+	int rc = mqttNetwork.connect(wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
 	printInfo("MQTT CONNECT");
 	if(!rc)
 	{

@@ -54,7 +54,6 @@ int NvmConfig::getWifiCredentials(sNetworkCredentials_t *credentials)
     return 1;
 }
 
-
 void NvmConfig::wifiSSIDConfig(int argc,char *argv[])
 {
     sNetworkCredentials_t cred;
@@ -132,5 +131,121 @@ void NvmConfig::wifiPasswordConfig(int argc,char *argv[])
     NvmConfig::setWifiCredentials(&cred);
 }
 
+bool NvmConfig::checkIp(char* ip)
+{
+    if(strlen(ip) > 16)
+        return false;
 
+    char tempIp[16];
+    memcpy(tempIp, ip, strlen(ip));
+
+    char *p = strchr(tempIp, '.');
+    if(!p)
+        return false;
+
+    *p = 0;
+    p++;
+
+    char *digit = tempIp;
+    int i = atoi(digit);
+    if((i < 0) || (i > 255))
+        return false;
+
+    uint8_t dotCount = 3;
+
+    while(p && dotCount)
+    {
+        digit = p;
+        p = strchr(digit, '.');
+
+        if(p)
+        {
+            *p = 0;
+            p++;
+        }
+
+        int i = atoi(digit);
+        if((i < 0) || (i > 255))
+            break;
+
+        dotCount--;
+    }
+
+    if(dotCount)
+        return false;
+
+    return true;
+}
+
+void NvmConfig::mqttIPConfig(int argc,char *argv[])
+{
+    sNetworkCredentials_t cred;
+    if(NvmConfig::getWifiCredentials(&cred) == -1)
+    {
+        printf(RED("EEPROM Not found\n"));
+        return;
+    }
+
+    if(argc == 1)
+    {
+        printf("MQTT IP : %s\n", cred.mqtt_ip);
+        return;
+    }
+
+    if(argc != 2)
+    {
+        printf(YELLOW("mip <ssid>\n"));
+        return;
+    }
+
+    char *ip = argv[1];
+
+    int len = strlen(ip);
+
+    printf("IP: ");
+    if(!checkIp(ip))
+    {
+        printf(RED("Invalid IP Address\n"));
+        return;
+    }
+
+    memset(cred.mqtt_ip, 0x00, sizeof(cred.mqtt_ip));
+    memcpy(cred.mqtt_ip, ip, len);
+
+    NvmConfig::setWifiCredentials(&cred);
+}
+
+void NvmConfig::mqttPortConfig(int argc,char *argv[])
+{
+    sNetworkCredentials_t cred;
+    if(NvmConfig::getWifiCredentials(&cred) == -1)
+    {
+        printf(RED("EEPROM Not found\n"));
+        return;
+    }
+
+    if(argc == 1)
+    {
+        printf("MQTT Port : %d\n", cred.mqtt_port);
+        return;
+    }
+
+    if(argc != 2)
+    {
+        printf(YELLOW("mp <port>\n"));
+        return;
+    }
+
+    int port = atoi(argv[1]);
+
+    if((port < 0) || (port > 65535))
+    {
+        printf("MQTT Port is a 16bit number\n");
+        return;
+    }
+
+    cred.mqtt_port = port;
+
+    NvmConfig::setWifiCredentials(&cred);
+}
 
