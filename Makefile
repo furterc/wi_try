@@ -67,6 +67,7 @@ OBJECTS += ./caboodle.git/src/stm8s_i2c_to_uart.o
 OBJECTS += ./caboodle.git/src/uitls.o
 OBJECTS += ./esp8266-driver/ESP8266/ESP8266.o
 OBJECTS += ./esp8266-driver/ESP8266Interface.o
+OBJECTS += ./mbed-jsmn/jsmn.o
 OBJECTS += ./mbed-os/cmsis/TARGET_CORTEX_M/mbed_tz_context.o
 OBJECTS += ./mbed-os/drivers/AnalogIn.o
 OBJECTS += ./mbed-os/drivers/BusIn.o
@@ -682,6 +683,7 @@ INCLUDE_PATHS += -I.././eclipse-extras
 INCLUDE_PATHS += -I.././esp8266-driver
 INCLUDE_PATHS += -I.././esp8266-driver/ESP8266
 INCLUDE_PATHS += -I.././inc
+INCLUDE_PATHS += -I.././mbed-jsmn
 INCLUDE_PATHS += -I.././mbed-os
 INCLUDE_PATHS += -I.././mbed-os/cmsis
 INCLUDE_PATHS += -I.././mbed-os/cmsis/TARGET_CORTEX_M
@@ -883,7 +885,6 @@ INCLUDE_PATHS += -I.././mbed-os/targets/TARGET_STM/TARGET_STM32F4/TARGET_STM32F4
 INCLUDE_PATHS += -I.././mbed-os/targets/TARGET_STM/TARGET_STM32F4/TARGET_STM32F411xE/device
 INCLUDE_PATHS += -I.././mbed-os/targets/TARGET_STM/TARGET_STM32F4/TARGET_STM32F411xE/device/TOOLCHAIN_GCC_ARM
 INCLUDE_PATHS += -I.././mbed-os/targets/TARGET_STM/TARGET_STM32F4/device
-INCLUDE_PATHS += -I.././picojson
 INCLUDE_PATHS += -I.././src
 
 LIBRARY_PATHS :=
@@ -904,6 +905,7 @@ PREPROC = 'arm-none-eabi-cpp' '-E' '-P' '-Wl,--gc-sections' '-Wl,--wrap,main' '-
 
 C_FLAGS += -std=gnu99
 C_FLAGS += -DFEATURE_NANOSTACK=1
+C_FLAGS += -DMBED_BUILD_TIMESTAMP=1539195860.74
 C_FLAGS += -D__MBED__=1
 C_FLAGS += -DDEVICE_I2CSLAVE=1
 C_FLAGS += -D__FPU_PRESENT=1
@@ -941,7 +943,7 @@ C_FLAGS += -DDEVICE_PORTIN=1
 C_FLAGS += -DDEVICE_LPTICKER=1
 C_FLAGS += -DTARGET_STM
 C_FLAGS += -DFEATURE_LOWPAN_ROUTER=1
-C_FLAGS += -DMBED_BUILD_TIMESTAMP=1538930723.69
+C_FLAGS += -DDEVICE_SERIAL_FC=1
 C_FLAGS += -DDEVICE_USTICKER=1
 C_FLAGS += -DTARGET_LIKE_MBED
 C_FLAGS += -D__MBED_CMSIS_RTOS_CM
@@ -956,7 +958,6 @@ C_FLAGS += -DLPTICKER_DELAY_TICKS=3
 C_FLAGS += -DDEVICE_FLASH=1
 C_FLAGS += -DTARGET_STM32F411RE
 C_FLAGS += -DARM_MATH_CM4
-C_FLAGS += -DDEVICE_SERIAL_FC=1
 C_FLAGS += -include
 C_FLAGS += mbed_config.h
 
@@ -964,6 +965,7 @@ CXX_FLAGS += -std=gnu++98
 CXX_FLAGS += -fno-rtti
 CXX_FLAGS += -Wvla
 CXX_FLAGS += -DFEATURE_NANOSTACK=1
+CXX_FLAGS += -DMBED_BUILD_TIMESTAMP=1539195860.74
 CXX_FLAGS += -D__MBED__=1
 CXX_FLAGS += -DDEVICE_I2CSLAVE=1
 CXX_FLAGS += -D__FPU_PRESENT=1
@@ -1001,7 +1003,7 @@ CXX_FLAGS += -DDEVICE_PORTIN=1
 CXX_FLAGS += -DDEVICE_LPTICKER=1
 CXX_FLAGS += -DTARGET_STM
 CXX_FLAGS += -DFEATURE_LOWPAN_ROUTER=1
-CXX_FLAGS += -DMBED_BUILD_TIMESTAMP=1538930723.69
+CXX_FLAGS += -DDEVICE_SERIAL_FC=1
 CXX_FLAGS += -DDEVICE_USTICKER=1
 CXX_FLAGS += -DTARGET_LIKE_MBED
 CXX_FLAGS += -D__MBED_CMSIS_RTOS_CM
@@ -1016,7 +1018,6 @@ CXX_FLAGS += -DLPTICKER_DELAY_TICKS=3
 CXX_FLAGS += -DDEVICE_FLASH=1
 CXX_FLAGS += -DTARGET_STM32F411RE
 CXX_FLAGS += -DARM_MATH_CM4
-CXX_FLAGS += -DDEVICE_SERIAL_FC=1
 CXX_FLAGS += -include
 CXX_FLAGS += mbed_config.h
 
@@ -1034,7 +1035,6 @@ ASM_FLAGS += -D__CMSIS_RTOS
 ASM_FLAGS += -I.././.
 ASM_FLAGS += -I.././esp8266-driver
 ASM_FLAGS += -I.././esp8266-driver/ESP8266
-ASM_FLAGS += -I.././picojson
 ASM_FLAGS += -I.././inc
 ASM_FLAGS += -I.././caboodle.git
 ASM_FLAGS += -I.././caboodle.git/include
@@ -1249,6 +1249,7 @@ ASM_FLAGS += -I.././mbed-os/rtos/TARGET_CORTEX/rtx5/RTX/Source/TOOLCHAIN_GCC/TAR
 ASM_FLAGS += -I.././mbed-os/rtos/TARGET_CORTEX/rtx5/Include
 ASM_FLAGS += -I.././mbed-os/rtos/TARGET_CORTEX/rtx5/Source
 ASM_FLAGS += -I.././src
+ASM_FLAGS += -I.././mbed-jsmn
 
 
 LD_FLAGS :=-Wl,--gc-sections -Wl,--wrap,main -Wl,--wrap,_malloc_r -Wl,--wrap,_free_r -Wl,--wrap,_realloc_r -Wl,--wrap,_memalign_r -Wl,--wrap,_calloc_r -Wl,--wrap,exit -Wl,--wrap,atexit -Wl,-n -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=softfp 

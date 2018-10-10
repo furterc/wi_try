@@ -13,6 +13,7 @@
 #include "EEP24xx16.h"
 
 #define NVM_OFFSET_WIFICONFIG   0x10
+#define NVM_OFFSET_THRESHOLDS   0x100
 
 typedef struct {
     char wifi_ssid[32];         //0  + 32 = 32
@@ -22,6 +23,12 @@ typedef struct {
     uint8_t placekeeper[6];
 } sNetworkCredentials_t;
 
+typedef struct {
+    int tempLow;
+    int tempHigh;
+    int humidLow;
+    int humidHigh;
+} sThresholds_t;
 
 
 class NvmConfig
@@ -31,23 +38,30 @@ class NvmConfig
     static NvmConfig *__instance;
     EEP24xx16 *mEeprom;
 
-
+    static bool checkIp(char* ip);
 public:
     virtual ~NvmConfig();
 
     static void init(EEP24xx16 *eeprom);
+
     static int setWifiCredentials(sNetworkCredentials_t *credentials);
     static int getWifiCredentials(sNetworkCredentials_t *credentials);
 
-    static bool checkIp(char* ip);
+    static int setThresholds(sThresholds_t *thresholds);
+    static int getThresholds(sThresholds_t *thresholds);
+
 
     static void wifiSSIDConfig(int argc,char *argv[]);
     static void wifiPasswordConfig(int argc,char *argv[]);
+
     static void mqttIPConfig(int argc,char *argv[]);
     static void mqttPortConfig(int argc,char *argv[]);
+
+    static void tempThresholdConfig(int argc,char *argv[]);
+    static void humidThresholdConfig(int argc,char *argv[]);
 };
 
-
+extern const Console::cmd_list_t configureCommands[];
 
 
 #endif /* SRC_NVM_CONFIG_H_ */

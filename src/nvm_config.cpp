@@ -11,10 +11,9 @@
 NvmConfig *NvmConfig::__instance = 0;
 
 
-
 NvmConfig::NvmConfig(EEP24xx16 *eeprom) : mEeprom(eeprom)
 {
-
+    printf("EEPROM Block Size : 0x%04X\n", mEeprom->getBlockSize());
 }
 
 NvmConfig::~NvmConfig()
@@ -49,6 +48,33 @@ int NvmConfig::getWifiCredentials(sNetworkCredentials_t *credentials)
     int len = __instance->mEeprom->read(NVM_OFFSET_WIFICONFIG, credentials, sizeof(sNetworkCredentials_t));
 
     if(len == sizeof(sNetworkCredentials_t))
+        return 0;
+
+    return 1;
+}
+
+
+int NvmConfig::setThresholds(sThresholds_t *thresholds)
+{
+    if(!__instance)
+        return -1;
+
+    int len = __instance->mEeprom->write(NVM_OFFSET_THRESHOLDS, thresholds, sizeof(sThresholds_t));
+
+    if(len == sizeof(sThresholds_t))
+        return 0;
+
+    return 1;
+}
+
+int NvmConfig::getThresholds(sThresholds_t *thresholds)
+{
+    if(!__instance)
+        return -1;
+
+    int len = __instance->mEeprom->read(NVM_OFFSET_THRESHOLDS, thresholds, sizeof(sThresholds_t));
+
+    if(len == sizeof(sThresholds_t))
         return 0;
 
     return 1;
@@ -249,3 +275,99 @@ void NvmConfig::mqttPortConfig(int argc,char *argv[])
     NvmConfig::setWifiCredentials(&cred);
 }
 
+void NvmConfig::tempThresholdConfig(int argc,char *argv[])
+{
+    sThresholds_t thresholds;
+    if(NvmConfig::getThresholds(&thresholds) == -1)
+    {
+        printf(RED("EEPROM Not found\n"));
+        return;
+    }
+
+    if(argc == 1)
+    {
+        printf("Temperature Thresholds\n - low  %d\n - high %d\n", thresholds.tempLow, thresholds.tempHigh);
+        return;
+    }
+
+    if(argc != 3)
+    {
+        printf(YELLOW("tht <low> <high>\n"));
+        return;
+    }
+
+    int low = atoi(argv[1]);
+    int high = atoi(argv[2]);
+
+    if(low > high)
+    {
+        printf(RED("Low > High\n"));
+        return;
+    }
+
+    if(low < 0 || low > 150 || high < 0 || high > 150)
+    {
+        printf(RED("0 < temperature < 150\n"));
+        return;
+    }
+
+    thresholds.tempLow = low;
+    thresholds.tempHigh = high;
+
+    NvmConfig::setThresholds(&thresholds);
+}
+
+
+void NvmConfig::humidThresholdConfig(int argc,char *argv[])
+{
+    sThresholds_t thresholds;
+    if(NvmConfig::getThresholds(&thresholds) == -1)
+    {
+        printf(RED("EEPROM Not found\n"));
+        return;
+    }
+
+    if(argc == 1)
+    {
+        printf("Humidity Thresholds\n - low  %d\n - high %d\n", thresholds.humidLow, thresholds.humidHigh);
+        return;
+    }
+
+    if(argc != 3)
+    {
+        printf(YELLOW("thh <low> <high>\n"));
+        return;
+    }
+
+    int low = atoi(argv[1]);
+    int high = atoi(argv[2]);
+
+    if(low > high)
+    {
+        printf(RED("Low > High\n"));
+        return;
+    }
+
+    if(low < 0 || low > 100 || high < 0 || high > 100)
+    {
+        printf(RED("0 < humidity < 100\n"));
+        return;
+    }
+
+    thresholds.humidLow = low;
+    thresholds.humidHigh = high;
+
+    NvmConfig::setThresholds(&thresholds);
+}
+
+const Console::cmd_list_t configureCommands[] =
+{
+        {"Configure"    ,0,0,0},
+        {"wid",       "",  "Set the WiFi SSID",             NvmConfig::wifiSSIDConfig},
+        {"wpw",       "",  "Set the WiFi Password",         NvmConfig::wifiPasswordConfig},
+        {"mip",       "",  "Set the MQTT IP",               NvmConfig::mqttIPConfig},
+        {"mp",        "",  "Set the MQTT Port",             NvmConfig::mqttPortConfig},
+        {"tht",       "",  "Set temperature thresholds",    NvmConfig::tempThresholdConfig},
+        {"thh",       "",  "Set humidity thresholds",       NvmConfig::humidThresholdConfig},
+        {0,0,0,0}
+};

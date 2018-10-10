@@ -13,7 +13,6 @@
 
 #include "mqtt_interface.h"
 #include "DHT22.h"
-#include "picojson.h"
 #include "MQTTNetwork.h"
 #include "MQTTmbed.h"
 #include "MQTTClient.h"
@@ -23,6 +22,8 @@
 #include "EEP24xx16.h"
 
 #include "nvm_config.h"
+
+#include "jsmn.h"
 
 
 ESP8266Interface wifi(D8, D2);
@@ -42,7 +43,7 @@ int arrivedcount = 0;
 
 //MQTTNetwork *mqttNetwork = 0;
 
-MQTT::Client<MQTTNetwork, Countdown> *client = 0;
+MQTT::Client<MQTTNetwork, Countdown> *mClient = 0;
 float version = 0.6;
 const char* topic = "mbed";
 
@@ -66,6 +67,8 @@ void scanWiFi(int argc,char *argv[])
 
 void wifiConnect(int argc,char *argv[])
 {
+
+
 
 }
 
@@ -99,16 +102,6 @@ const Console::cmd_list_t mainCommands[] =
       {0,0,0,0}
 };
 
-const Console::cmd_list_t configureCommands[] =
-{
-        {"Configure"    ,0,0,0},
-        {"wid",       "",  "Set the WiFi SSID", NvmConfig::wifiSSIDConfig},
-        {"wpw",       "",  "Set the WiFi Password", NvmConfig::wifiPasswordConfig},
-        {"mip",       "",  "Set the MQTT IP", NvmConfig::mqttIPConfig},
-        {"mp",        "",  "Set the MQTT Port", NvmConfig::mqttPortConfig},
-        {0,0,0,0}
-};
-
 Console::cmd_list_t *Console::mCmdTable[] =
 {
         (cmd_list_t*)shellCommands,
@@ -131,37 +124,225 @@ void printWifiInfo()
     printf("%d\n", wifi.get_rssi());
 }
 
-    static picojson::value v;
-    static char msg[128];
-    const char *msgP = (const char *)msg;
+static int jsoneq(const char *json, jsmntok_t *tok, const char *s)
+{
+    if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
+            strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
+        return 0;
+    }
+    return -1;
+}
 
-    void messageIn(MQTT::MessageData& md)
+void parseRequestJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
+{
+    if (jsoneq(msg, &tokens[2], "thresholds") == 0)
+    {
+        sThresholds_t thresholds;
+        NvmConfig::getThresholds(&thresholds);
+
+        char buffer[64];
+        memset(buffer, 0, 64);
+        snprintf(buffer, 64,
+                "{"
+                "\"tempLow\":%d,"
+                "\"tempHigh\":%d,"
+                "\"humidLow\":%d,"
+                "\"humidHigh\":%d"
+                "}", thresholds.tempLow,
+                thresholds.tempHigh,
+                thresholds.humidLow,
+                thresholds.humidHigh);
+
+        printInfo("JSON out");
+        printf("%s\n" ,  buffer);
+
+        MQTT::Message message;
+        message.qos = MQTT::QOS0;
+        message.retained = false;
+        message.dup = false;
+        message.payload = buffer;
+        message.payloadlen = strlen(buffer);
+
+        printInfo("MQTT Publish");
+        if(mClient->publish("mbed", message))
+            printf(RED("FAIL\n"));
+        else
+            printf(GREEN("OK\n"));
+    }
+}
+
+
+void parseTempThreshJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
+{
+    sThresholds_t thresholds;
+    NvmConfig::getThresholds(&thresholds);
+
+    char value[16];
+    memset(value, 0, 16);
+
+    /* Loop over all keys of the root object */
+    for (int i = 1; i < tokenCount; i++)
+    {
+        if (jsoneq(msg, &tokens[i], "tempLow") == 0)
+        {
+            int len = tokens[i+1].end-tokens[i+1].start;
+            memcpy(value, msg + tokens[i+1].start, len);
+            value[len] = 0;
+
+            thresholds.tempLow = atoi(value);
+
+            i++;
+        } else if (jsoneq(msg, &tokens[i], "tempHigh") == 0)
+        {
+            int len = tokens[i+1].end-tokens[i+1].start;
+            memcpy(value, msg + tokens[i+1].start, len);
+            value[len] = 0;
+
+            thresholds.tempHigh = atoi(value);
+
+            i++;
+        } else if (jsoneq(msg, &tokens[i], "humidLow") == 0)
+        {
+            int len = tokens[i+1].end-tokens[i+1].start;
+            memcpy(value, msg + tokens[i+1].start, len);
+            value[len] = 0;
+
+            thresholds.humidLow = atoi(value);
+
+            i++;
+        } else if (jsoneq(msg, &tokens[i], "humidHigh") == 0)
+        {
+            int len = tokens[i+1].end-tokens[i+1].start;
+            memcpy(value, msg + tokens[i+1].start, len);
+            value[len] = 0;
+
+            thresholds.humidHigh = atoi(value);
+        }
+    }
+    NvmConfig::setThresholds(&thresholds);
+}
+
+void parseTimeJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
+{
+    struct tm t;
+
+    char value[16];
+    memset(value, 0, 16);
+
+    /* Loop over all keys of the root object */
+    for (int i = 1; i < tokenCount; i++)
+    {
+        if (jsoneq(msg, &tokens[i], "year") == 0)
+        {
+            int len = tokens[i+1].end-tokens[i+1].start;
+            memcpy(value, msg + tokens[i+1].start, len);
+            value[len] = 0;
+
+            t.tm_year = atoi(value) - 1900;
+            printf("year  %s\n", value);
+
+            i++;
+        } else if (jsoneq(msg, &tokens[i], "month") == 0)
+        {
+            int len = tokens[i+1].end-tokens[i+1].start;
+            memcpy(value, msg + tokens[i+1].start, len);
+            value[len] = 0;
+
+            t.tm_mon = atoi(value) - 1;
+            printf("month %s\n", value);
+
+            i++;
+        } else if (jsoneq(msg, &tokens[i], "day") == 0)
+        {
+            int len = tokens[i+1].end-tokens[i+1].start;
+            memcpy(value, msg + tokens[i+1].start, len);
+            value[len] = 0;
+
+            t.tm_mday = atoi(value);
+            printf("day %s\n", value);
+
+            i++;
+        } else if (jsoneq(msg, &tokens[i], "hour") == 0)
+        {
+            int len = tokens[i+1].end-tokens[i+1].start;
+            memcpy(value, msg + tokens[i+1].start, len);
+            value[len] = 0;
+
+            t.tm_hour = atoi(value);
+            printf("hour %s\n", value);
+
+            i++;
+        } else if (jsoneq(msg, &tokens[i], "minute") == 0)
+        {
+            int len = tokens[i+1].end-tokens[i+1].start;
+            memcpy(value, msg + tokens[i+1].start, len);
+            value[len] = 0;
+
+            t.tm_min = atoi(value);
+            printf("minute %s\n", value);
+
+            i++;
+        } else if (jsoneq(msg, &tokens[i], "second") == 0)
+        {
+            int len = tokens[i+1].end-tokens[i+1].start;
+            memcpy(value, msg + tokens[i+1].start, len);
+            value[len] = 0;
+
+            t.tm_sec = atoi(value);
+            printf("minute %s\n", value);
+
+            i++;
+        }
+    }
+
+    set_time(mktime(&t));
+
+
+}
+
+void messageIn(MQTT::MessageData& md)
 {
     MQTT::Message &message = md.message;
     printf("\n");
-    printInfo(GREEN("MQTT MSG IN"));
-    printf("qos %d, retained %d, dup %d, packetid %d\n", message.qos, message.retained, message.dup, message.id);
+//    printInfo(GREEN("MQTT MSG IN"));
+//    printf("qos %d, retained %d, dup %d, packetid %d\n", message.qos, message.retained, message.dup, message.id);
     printInfo("MSG PAYLOAD");
     printf("%.*s\n", message.payloadlen, (char*)message.payload);
 
-//    memcpy(msg, message.payload, message.payloadlen);
-//    msg[message.payloadlen] = '\0';
-//
-//
-//    string err = picojson::parse(v, msgP, msgP + strlen(msgP));
+    jsmn_parser parser;
+    jsmntok_t tokens[16];
 
-//    void *result = err;
-//
-//    if(result)
-//        printf("res error? %s\r\n", err.c_str());
-//
-//    result =
+    jsmn_init(&parser);
 
-//    printf("year =%s\r\n" ,  v.get("humid").get<string>().c_str());
-//    printf("month =%s\r\n" ,  v.get("month").get<string>().c_str());
-//    printf("day =%s\r\n" ,  v.get("day").get<string>().c_str());
-//    printf("hour =%s\r\n" ,  v.get("hour").get<string>().c_str());
-//    printf("minute =%s\r\n" ,  v.get("minute").get<string>().c_str());
+    char msg[128];
+    memcpy(msg, message.payload, message.payloadlen);
+    msg[message.payloadlen] = '\0';
+
+
+    int r = jsmn_parse(&parser, msg, strlen(msg), tokens, 16);
+    printf("jsmn_parse: %d\n", r);
+
+    /* Assume the top-level element is an object */
+    if (r < 1 || tokens[0].type != JSMN_OBJECT)
+    {
+        printf("Object expected\n");
+        return;
+    }
+
+    /* Loop over all keys of the root object */
+//    for (int i = 1; i < r; i++)
+//    {
+    if (jsoneq(msg, &tokens[1], "year") == 0)
+        parseTimeJsonObj(tokens, r, msg);
+
+    if (jsoneq(msg, &tokens[1], "tempLow") == 0)
+        parseTempThreshJsonObj(tokens, r, msg);
+
+    if (jsoneq(msg, &tokens[1], "request") == 0)
+    {
+        printf("request obj\n");
+        parseRequestJsonObj(tokens, r, msg);
+    }
 
 }
 
@@ -210,7 +391,7 @@ int main()
 
 	MQTTNetwork mqttNetwork(&wifi);
 	MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
-
+	mClient = &client;
 	printInfo("MQTT CONNECT");
 	printf("%s:%d\n", wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
 
@@ -255,7 +436,7 @@ int main()
         wait(0.5);
     	client.yield(3000);
 
-    	if(inCount > 1200)
+    	if(inCount > 60)
     	{
     	    inCount = 0;
     	    if(MQTT_Interface::isConnected())
@@ -267,28 +448,32 @@ int main()
     	        printf("%d\n", temp);
     	        printInfo("Humidity");
     	        printf("%d\n", humid);
-    	        picojson::object v;
-    	        picojson::object inner;
-    	        v["temp"] = picojson::value((double)(temp));
-    	        v["humid"] = picojson::value((double)humid);
 
-    	        string str = picojson::value(v).serialize();
+
+    	        char buffer[64];
+    	        memset(buffer, 0, 64);
+    	        snprintf(buffer, 64,
+    	                "{"
+    	                "\"temp\":%d,"
+    	                "\"humid\":%d"
+    	                "}", temp, humid);
+
     	        printInfo("JSON out");
-    	        printf("%s\n" ,  str.c_str());
+    	        printf("%s\n" ,  buffer);
 
 
     	        message.qos = MQTT::QOS0;
     	        message.retained = false;
     	        message.dup = false;
-    	        message.payload = (void*)str.c_str();
-    	        message.payloadlen = strlen(str.c_str());
+    	        message.payload = buffer;
+    	        message.payloadlen = strlen(buffer);
 
     	        printInfo("MQTT Publish");
     	        if(client.publish(topic, message))
     	            printf(RED("FAIL\n"));
     	        else
     	            printf(GREEN("OK\n"));
-//    	        MQTT_Interface::send((uint8_t *)str.c_str(), strlen(str.c_str()));
+//    	        MQTT_Interface::send((uint8_t *).c_str(), strlen(str.c_str()));
     	    }
     	}
 	}

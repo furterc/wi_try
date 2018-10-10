@@ -29,8 +29,6 @@
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/picojson}&quot;"/>
-								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/inc}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/caboodle.git}&quot;"/>
@@ -458,6 +456,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-os/rtos/TARGET_CORTEX/rtx5/Source}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/src}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-jsmn}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/}&quot;"/>
 								    
@@ -494,8 +494,6 @@
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/picojson}&quot;"/>
-								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/inc}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/caboodle.git}&quot;"/>
@@ -924,12 +922,16 @@
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/src}&quot;"/>
 								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-jsmn}&quot;"/>
+								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/}&quot;"/>
 								    
 								</option>
 								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.496389156" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
 									
                                     <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
+                                    
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1539195860.74"/>
                                     
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
@@ -1005,7 +1007,7 @@
                                     
                                     <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1538930723.69"/>
+                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_USTICKER=1"/>
                                     
@@ -1034,8 +1036,6 @@
                                     <listOptionValue builtIn="false" value="TARGET_STM32F411RE"/>
                                     
                                     <listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
-                                    
-                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
                                     
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.869095164" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
@@ -1049,8 +1049,6 @@
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/esp8266-driver/ESP8266}&quot;"/>
 								    
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/picojson}&quot;"/>
-								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/inc}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/caboodle.git}&quot;"/>
@@ -1479,12 +1477,16 @@
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/src}&quot;"/>
 								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-jsmn}&quot;"/>
+								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/}&quot;"/>
 								    
 								</option>
 								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.1395532696" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
 									
                                     <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
+                                    
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1539195860.74"/>
                                     
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
@@ -1560,7 +1562,7 @@
                                     
                                     <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1538930723.69"/>
+                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_USTICKER=1"/>
                                     
@@ -1589,8 +1591,6 @@
                                     <listOptionValue builtIn="false" value="TARGET_STM32F411RE"/>
                                     
                                     <listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
-                                    
-                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
                                     
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1704200665" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
