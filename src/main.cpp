@@ -24,6 +24,7 @@
 #include "nvm_config.h"
 
 #include "jsmn.h"
+#include "rtc_alarm.h"
 
 
 ESP8266Interface wifi(D8, D2);
@@ -372,110 +373,123 @@ int main()
         printf(GREEN("OK\n"));
         NvmConfig::init(eeprom);
 	}
-
-	static sNetworkCredentials_t wifiCredentials;
-	NvmConfig::getWifiCredentials(&wifiCredentials);
-
-	printInfo("WIFI");
-	printf(GREEN("Connecting...\n"));
-	int ret = wifi.connect(wifiCredentials.wifi_ssid, wifiCredentials.wifi_pw, NSAPI_SECURITY_WPA_WPA2);
-
-	printInfo("WIFI Connection");
-	if (ret != 0) {
-	    printf(RED("FAIL\n"));
-	    return -1;
-	}
-	printf(GREEN("OK\n"));
-
-	printWifiInfo();
-
-	MQTTNetwork mqttNetwork(&wifi);
-	MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
-	mClient = &client;
-	printInfo("MQTT CONNECT");
-	printf("%s:%d\n", wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
-
-	int rc = mqttNetwork.connect(wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
-	printInfo("MQTT CONNECT");
-	if(!rc)
-	{
-	    printf(GREEN("OK\n"));
-	}
-	else
-	{
-	    printf(RED("FAIL\n"));
-	}
-
-	MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
-	data.MQTTVersion = 3;
-	data.clientID.cstring = (char*)"mbed-sample";
-	//      data.username.cstring = "testuser";
-	//      data.password.cstring = "testpassword";
-	if ((rc = client.connect(data)) != 0)
-	    printf("rc from MQTT connect is %d\r\n", rc);
-
-	const char* topic = "mbed";
-	printInfo("MQTT Sub Topic");
-	printf("%s : ", topic);
-	if ((rc = client.subscribe(topic, MQTT::QOS2, messageIn)) != 0)
-	    printf(RED("FAIL\n"));
-	else
-	    printf(GREEN("OK\n"));
+//
+//	static sNetworkCredentials_t wifiCredentials;
+//	NvmConfig::getWifiCredentials(&wifiCredentials);
+//
+//	printInfo("WIFI");
+//	printf(GREEN("Connecting...\n"));
+//	int ret = wifi.connect(wifiCredentials.wifi_ssid, wifiCredentials.wifi_pw, NSAPI_SECURITY_WPA_WPA2);
+//
+//	printInfo("WIFI Connection");
+//	if (ret != 0) {
+//	    printf(RED("FAIL\n"));
+//	    return -1;
+//	}
+//	printf(GREEN("OK\n"));
+//
+//	printWifiInfo();
+//
+//	MQTTNetwork mqttNetwork(&wifi);
+//	MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
+//	mClient = &client;
+//	printInfo("MQTT CONNECT");
+//	printf("%s:%d\n", wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
+//
+//	int rc = mqttNetwork.connect(wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
+//	printInfo("MQTT CONNECT");
+//	if(!rc)
+//	{
+//	    printf(GREEN("OK\n"));
+//	}
+//	else
+//	{
+//	    printf(RED("FAIL\n"));
+//	}
+//
+//	MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
+//	data.MQTTVersion = 3;
+//	data.clientID.cstring = (char*)"mbed-sample";
+//	//      data.username.cstring = "testuser";
+//	//      data.password.cstring = "testpassword";
+//	if ((rc = client.connect(data)) != 0)
+//	    printf("rc from MQTT connect is %d\r\n", rc);
+//
+//	const char* topic = "mbed";
+//	printInfo("MQTT Sub Topic");
+//	printf("%s : ", topic);
+//	if ((rc = client.subscribe(topic, MQTT::QOS2, messageIn)) != 0)
+//	    printf(RED("FAIL\n"));
+//	else
+//	    printf(GREEN("OK\n"));
 
 
 //	MQTT_Interface::init(&mqttNetwork, &client);
 //	MQTT_Interface::connect();
 
-    MQTT::Message message;
+//    MQTT::Message message;
+
+    sRTCAlarmObj_t alarmOn;
+    alarmOn.hour = 0;
+    alarmOn.minute = 1;
+
+    sRTCAlarmObj_t alarmOff;
+    alarmOff.hour = 0;
+    alarmOff.minute = 3;
+
+    RTC_Alarm testAlarm;
+
+    testAlarm.setAlarm(&alarmOn, &alarmOff);
 
     while (1)
 	{
+        testAlarm.checkAlarm();
         static int inCount = 1200;
 
         inCount++;
         wait(0.5);
-    	client.yield(3000);
-
-    	if(inCount > 60)
-    	{
-    	    inCount = 0;
-    	    if(MQTT_Interface::isConnected())
-    	    {
-    	        uint16_t temp = 0;
-    	        uint16_t humid = 0;
-    	        sample_dht22(temp, humid);
-    	        printInfo("Temperature");
-    	        printf("%d\n", temp);
-    	        printInfo("Humidity");
-    	        printf("%d\n", humid);
-
-
-    	        char buffer[64];
-    	        memset(buffer, 0, 64);
-    	        snprintf(buffer, 64,
-    	                "{"
-    	                "\"temp\":%d,"
-    	                "\"humid\":%d"
-    	                "}", temp, humid);
-
-    	        printInfo("JSON out");
-    	        printf("%s\n" ,  buffer);
-
-
-    	        message.qos = MQTT::QOS0;
-    	        message.retained = false;
-    	        message.dup = false;
-    	        message.payload = buffer;
-    	        message.payloadlen = strlen(buffer);
-
-    	        printInfo("MQTT Publish");
-    	        if(client.publish(topic, message))
-    	            printf(RED("FAIL\n"));
-    	        else
-    	            printf(GREEN("OK\n"));
-//    	        MQTT_Interface::send((uint8_t *).c_str(), strlen(str.c_str()));
-    	    }
-    	}
+//    	client.yield(3000);
+//
+//    	if(inCount > 60)
+//    	{
+//    	    inCount = 0;
+//    	    if(MQTT_Interface::isConnected())
+//    	    {
+//    	        uint16_t temp = 0;
+//    	        uint16_t humid = 0;
+//    	        sample_dht22(temp, humid);
+//    	        printInfo("Temperature");
+//    	        printf("%d\n", temp);
+//    	        printInfo("Humidity");
+//    	        printf("%d\n", humid);
+//
+//
+//    	        char buffer[64];
+//    	        memset(buffer, 0, 64);
+//    	        snprintf(buffer, 64,
+//    	                "{"
+//    	                "\"temp\":%d,"
+//    	                "\"humid\":%d"
+//    	                "}", temp, humid);
+//
+//    	        printInfo("JSON out");
+//    	        printf("%s\n" ,  buffer);
+//
+//
+//    	        message.qos = MQTT::QOS0;
+//    	        message.retained = false;
+//    	        message.dup = false;
+//    	        message.payload = buffer;
+//    	        message.payloadlen = strlen(buffer);
+//
+//    	        printInfo("MQTT Publish");
+//    	        if(client.publish(topic, message))
+//    	            printf(RED("FAIL\n"));
+//    	        else
+//    	            printf(GREEN("OK\n"));
+////    	        MQTT_Interface::send((uint8_t *).c_str(), strlen(str.c_str()));
+//    	    }
+//    	}
 	}
 
 	return 1;

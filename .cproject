@@ -931,8 +931,6 @@
 									
                                     <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1539195860.74"/>
-                                    
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2CSLAVE=1"/>
@@ -963,17 +961,19 @@
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
                                     
-                                    <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
+                                    <listOptionValue builtIn="false" value="TARGET_UVISOR_UNSUPPORTED"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_CORTEX_M"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_DEBUG"/>
                                     
+                                    <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
+                                    
                                     <listOptionValue builtIn="false" value="TARGET_LIKE_CORTEX_M4"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_M4"/>
                                     
-                                    <listOptionValue builtIn="false" value="TARGET_UVISOR_UNSUPPORTED"/>
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1539630244.14"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SPI_ASYNCH=1"/>
                                     
@@ -1486,8 +1486,6 @@
 									
                                     <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1539195860.74"/>
-                                    
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2CSLAVE=1"/>
@@ -1518,17 +1516,19 @@
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
                                     
-                                    <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
+                                    <listOptionValue builtIn="false" value="TARGET_UVISOR_UNSUPPORTED"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_CORTEX_M"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_DEBUG"/>
                                     
+                                    <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
+                                    
                                     <listOptionValue builtIn="false" value="TARGET_LIKE_CORTEX_M4"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_M4"/>
                                     
-                                    <listOptionValue builtIn="false" value="TARGET_UVISOR_UNSUPPORTED"/>
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1539630244.14"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SPI_ASYNCH=1"/>
                                     
