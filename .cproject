@@ -53,6 +53,8 @@
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/eclipse-extras}&quot;"/>
 								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/iicDisplay}&quot;"/>
+								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-os}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-os/drivers}&quot;"/>
@@ -518,6 +520,8 @@
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/eclipse-extras}&quot;"/>
 								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/iicDisplay}&quot;"/>
+								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-os}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-os/drivers}&quot;"/>
@@ -957,23 +961,23 @@
                                     
                                     <listOptionValue builtIn="false" value="__CORTEX_M4"/>
                                     
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1540033995.27"/>
+                                    
                                     <listOptionValue builtIn="false" value="TARGET_FF_ARDUINO"/>
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
                                     
-                                    <listOptionValue builtIn="false" value="TARGET_UVISOR_UNSUPPORTED"/>
+                                    <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_CORTEX_M"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_DEBUG"/>
                                     
-                                    <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
-                                    
                                     <listOptionValue builtIn="false" value="TARGET_LIKE_CORTEX_M4"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_M4"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1539630244.14"/>
+                                    <listOptionValue builtIn="false" value="TARGET_UVISOR_UNSUPPORTED"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SPI_ASYNCH=1"/>
                                     
@@ -1072,6 +1076,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/MQTT/FP}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/eclipse-extras}&quot;"/>
+								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/iicDisplay}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-os}&quot;"/>
 								    
@@ -1512,23 +1518,23 @@
                                     
                                     <listOptionValue builtIn="false" value="__CORTEX_M4"/>
                                     
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1540033995.27"/>
+                                    
                                     <listOptionValue builtIn="false" value="TARGET_FF_ARDUINO"/>
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
                                     
-                                    <listOptionValue builtIn="false" value="TARGET_UVISOR_UNSUPPORTED"/>
+                                    <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_CORTEX_M"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_DEBUG"/>
                                     
-                                    <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
-                                    
                                     <listOptionValue builtIn="false" value="TARGET_LIKE_CORTEX_M4"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_M4"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1539630244.14"/>
+                                    <listOptionValue builtIn="false" value="TARGET_UVISOR_UNSUPPORTED"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SPI_ASYNCH=1"/>
                                     
