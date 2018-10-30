@@ -11,17 +11,22 @@
 
 MQTT_Interface *MQTT_Interface::__instance = 0;
 
-
-
 MQTT_Interface::MQTT_Interface(MQTTNetwork* network, MQTT::Client<MQTTNetwork, Countdown> *client) : mMQTTNetwork(network), mClient(client), work(osPriorityLow, OS_STACK_SIZE, NULL, "mqttInterface")
 {
+    mHostname = 0;
+    mPort = 0;
+
+    connectedCallback = 0;
+
     work.start(callback(run, this));
     state = MQTT_IDLE;
 }
 
 MQTT_Interface::~MQTT_Interface()
 {
-
+    if(__instance->mHostname != 0)
+        free(__instance->mHostname);
+    __instance->mHostname = 0;
 }
 
 void MQTT_Interface::init(MQTTNetwork* network, MQTT::Client<MQTTNetwork, Countdown> *client)
@@ -30,7 +35,7 @@ void MQTT_Interface::init(MQTTNetwork* network, MQTT::Client<MQTTNetwork, Countd
         __instance = new MQTT_Interface(network, client);
 }
 
-void MQTT_Interface::connect()
+void MQTT_Interface::connect(char *ipAddr, uint16_t port)
 {
 	if(__instance->state != MQTT_IDLE)
 	{
@@ -38,17 +43,33 @@ void MQTT_Interface::connect()
 		return;
 	}
 	__instance->state = MQTT_CONNECT;
+	if(__instance->mHostname != 0)
+	    free(__instance->mHostname);
+
+	int len = strlen(ipAddr);
+	__instance->mHostname = (char*)malloc(len+1);
+	memset(__instance->mHostname, 0x00, len+1);
+	memcpy(__instance->mHostname, ipAddr, len);
+	__instance->mPort = port;
 }
+
 
 bool MQTT_Interface::isConnected()
 {
 	return __instance->mClient->isConnected();
-
 }
 
-void MQTT_Interface::send(uint8_t *buf, int len)
+void MQTT_Interface::setConnectedCallback(void (*callback)(void))
 {
-	printf("MQTT_SEND\n");
+    __instance->connectedCallback = callback;
+}
+
+int MQTT_Interface::publish(const char *topic, uint8_t *buf, int len, bool debug)
+{
+    if(!__instance->mClient->isConnected())
+    {
+        return -1;
+    }
 
 	MQTT::Message message;
 
@@ -58,34 +79,39 @@ void MQTT_Interface::send(uint8_t *buf, int len)
 	message.payload = (void*)buf;
 	message.payloadlen = len;
 
-	const char* topic = "mbed";
 	int rc = __instance->mClient->publish(topic, message);
-	printf("MQTT: Publish: %d\n", rc);
-	//	while (arrivedcount < 1)
-	//		client->yield(100);
 
-	printf("MQTT_SEND\n");
-	__instance->state = MQTT_IDLE;
-//	if(__instance->state != MQTT_IDLE)
-//	{
-//		printf(YELLOW("MQTT Busy\n"));
-//		return;
-//	}
-//	__instance->state = MQTT_SEND;
+	if(debug)
+	{
+	    printInfo("MQTT Publish: ");
+	    if(rc)
+	        printf(RED("FAIL\n"));
+	    else
+	        printf(GREEN("OK\n"));
+
+	    diag_dump_buf(message.payload, message.payloadlen);
+	}
+	return rc;
 }
 
-void MQTT_Interface::messageArrived(MQTT::MessageData& md)
+int MQTT_Interface::subscribe(const char *topic, void (*messageHandler)(MQTT::MessageData &data))
 {
-    MQTT::Message &message = md.message;
-    printf("Message arrived: qos %d, retained %d, dup %d, packetid %d\r\n", message.qos, message.retained, message.dup, message.id);
-    printf("Payload %.*s\r\n", message.payloadlen, (char*)message.payload);
+      printInfo("MQTT Sub Topic");
+      printf("%s : ", topic);
+
+      printInfo("MQTT Sub Topic");
+      int rc = __instance->mClient->subscribe(topic, MQTT::QOS2, messageHandler);
+      if (rc != 0)
+          printf(RED("FAIL\n"));
+      else
+          printf(GREEN("OK\n"));
+
+      return rc;
 }
 
 void MQTT_Interface::run(MQTT_Interface *instance)
 {
 	printf("mqttInterface: 0x%X\n", (int)Thread::gettid());
-
-
 	while(__instance)
 	{
 		wait(1);
@@ -97,59 +123,56 @@ void MQTT_Interface::run(MQTT_Interface *instance)
 		}break;
 		case MQTT_CONNECT:
 		{
-			const char* hostname = "10.0.0.174";
-			int port = 1883;
-			printf("Connecting to %s:%d\r\n", hostname, port);
-			int rc = __instance->mMQTTNetwork->connect(hostname, port);
-			printf("1\n");
-			if (rc != 0)
-				printf("rc from TCP connect is %d\r\n", rc);
+			printInfo("MQTT NETWORK");
+			printf("%s:%d\n", __instance->mHostname, __instance->mPort);
 
-			printf("2\n");
-			MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
-			data.MQTTVersion = 3;
-			data.clientID.cstring = (char*)"mbed-sample";
-			//	    data.username.cstring = "testuser";
-			//	    data.password.cstring = "testpassword";
-			if ((rc = __instance->mClient->connect(data)) != 0)
-				printf("rc from MQTT connect is %d\r\n", rc);
+		    printInfo("MQTT NETWORK");
+			int rc = __instance->mMQTTNetwork->connect(__instance->mHostname, __instance->mPort);
+		    if(!rc)
+		    {
+		        printf(GREEN("CONNECT OK\n"));
 
-			printf("3\n");
-			const char* topic = "mbed";
-			if ((rc = __instance->mClient->subscribe(topic, MQTT::QOS2, messageArrived)) != 0)
-				printf("rc from MQTT subscribe is %d\r\n", rc);
+		        MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
+		        data.MQTTVersion = 3;
+		        data.clientID.cstring = (char*)"mbed-sample";
+		        //      data.username.cstring = "testuser";
+		        //      data.password.cstring = "testpassword";
 
-			__instance->state = MQTT_IDLE;
+		        printInfo("MQTT CLIENT");
+		        printf("%s\n", data.clientID.cstring);
+
+		        printInfo("MQTT CLIENT");
+		        rc = __instance->mClient->connect(data);
+		        if(rc)
+		            printf(RED("CONNECT FAIL : %d\n"), (int)rc);
+		        else
+		        {
+		            printf(GREEN("CONNECT OK\n"));
+		            if(__instance->connectedCallback != 0)
+		                __instance->connectedCallback();
+		        }
+
+
+
+
+		        __instance->state = MQTT_IDLE;
+		    }
+		    else
+		    {
+		        printf(RED("CONNECT FAIL : %d\n"), (int)rc);
+		        __instance->state = MQTT_FAIL;
+		    }
 		}break;
 		case MQTT_CONNECTED:
 		{
 
 		}break;
-		case MQTT_SEND:
-		{
-			printf("MQTT_SEND\n");
-
-			MQTT::Message message;
-
-			const char *msg = "hi";
-			message.qos = MQTT::QOS0;
-			message.retained = false;
-			message.dup = false;
-			message.payload = (void*)msg;
-			message.payloadlen = 2;
-
-			const char* topic = "mbed";
-			int rc = __instance->mClient->publish(topic, message);
-			printf("MQTT: Publish: %d\n", rc);
-			//	while (arrivedcount < 1)
-			//		client->yield(100);
-
-			printf("MQTT_SEND\n");
-			__instance->state = MQTT_IDLE;
-		}break;
 		case MQTT_IDLE:
 		{
 			__instance->mClient->yield(30000);
+//			if(!__instance->mClient->isConnected())
+//			    __instance->state = MQTT_CONNECT;
+
 		}break;
 		default:
 			break;

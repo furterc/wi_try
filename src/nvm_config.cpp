@@ -80,6 +80,32 @@ int NvmConfig::getThresholds(sThresholds_t *thresholds)
     return 1;
 }
 
+int NvmConfig::setAlarms(sAlarmTimes_t *alarms)
+{
+    if(!__instance)
+        return -1;
+
+    int len = __instance->mEeprom->write(NVM_OFFSET_ALARMS, alarms, sizeof(sAlarmTimes_t));
+
+    if(len == sizeof(sAlarmTimes_t))
+        return 0;
+
+    return 1;
+}
+
+int NvmConfig::getAlarms(sAlarmTimes_t *alarms)
+{
+    if(!__instance)
+        return -1;
+
+    int len = __instance->mEeprom->read(NVM_OFFSET_ALARMS, alarms, sizeof(sAlarmTimes_t));
+
+    if(len == sizeof(sAlarmTimes_t))
+        return 0;
+
+    return 1;
+}
+
 void NvmConfig::wifiSSIDConfig(int argc,char *argv[])
 {
     sNetworkCredentials_t cred;
@@ -317,7 +343,6 @@ void NvmConfig::tempThresholdConfig(int argc,char *argv[])
     NvmConfig::setThresholds(&thresholds);
 }
 
-
 void NvmConfig::humidThresholdConfig(int argc,char *argv[])
 {
     sThresholds_t thresholds;
@@ -360,6 +385,54 @@ void NvmConfig::humidThresholdConfig(int argc,char *argv[])
     NvmConfig::setThresholds(&thresholds);
 }
 
+void NvmConfig::lightAlarmConfig(int argc,char *argv[])
+{
+    sAlarmTimes_t alarms;
+    if(NvmConfig::getAlarms(&alarms) == -1)
+    {
+        printf(RED("EEPROM Not found\n"));
+        return;
+    }
+
+    if(argc == 1)
+    {
+        printf("Light Alarm \n - on  %02d:%02d\n - off %02d:%02d\n",
+                alarms.lightOn.hour, alarms.lightOn.minute,
+                alarms.lightOff.hour, alarms.lightOff.minute);
+        return;
+    }
+
+    if(argc != 5)
+    {
+        printf(YELLOW("la <onHour> <onMinute> <offHour> <offMinute>\n"));
+        return;
+    }
+
+    int onHour    = atoi(argv[1]);
+    int onMinute  = atoi(argv[2]);
+    int offHour   = atoi(argv[3]);
+    int offMinute = atoi(argv[4]);
+
+    if(onHour < 0 || onHour > 23 || offHour < 0 || offHour > 23)
+    {
+        printf(RED("0 < Hour < 23\n"));
+        return;
+    }
+
+    if(onMinute < 0 || onMinute > 59 || offMinute < 0 || offMinute > 59)
+    {
+        printf(RED("0 < Minute < 59\n"));
+        return;
+    }
+
+    alarms.lightOn.hour    = onHour;
+    alarms.lightOn.minute  = onMinute;
+    alarms.lightOff.hour   = offHour;
+    alarms.lightOff.minute = offMinute;
+
+    NvmConfig::setAlarms(&alarms);
+}
+
 const Console::cmd_list_t configureCommands[] =
 {
         {"Configure"    ,0,0,0},
@@ -369,5 +442,6 @@ const Console::cmd_list_t configureCommands[] =
         {"mp",        "",  "Set the MQTT Port",             NvmConfig::mqttPortConfig},
         {"tht",       "",  "Set temperature thresholds",    NvmConfig::tempThresholdConfig},
         {"thh",       "",  "Set humidity thresholds",       NvmConfig::humidThresholdConfig},
+        {"la",        "",  "Set Light Alarm",               NvmConfig::lightAlarmConfig},
         {0,0,0,0}
 };

@@ -62,13 +62,5 @@ void RTC_Alarm::checkAlarm()
     if(triggerCallback)
         triggerCallback(triggered);
 
-    printf("Alarm Triggered %d @ %02d:%02d!\n", triggered, hour,min);
-
-//    printf ( "Current local time and date: %s", asctime (timeinfo) );
-
-
-//
-//    struct tm t;
-//    time(mktime(&t));
-
+    printf("\n\nAlarm Triggered %d @ %02d:%02d!\n\n\n", triggered, hour,min);
 }

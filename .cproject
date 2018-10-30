@@ -961,8 +961,6 @@
                                     
                                     <listOptionValue builtIn="false" value="__CORTEX_M4"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1540033995.27"/>
-                                    
                                     <listOptionValue builtIn="false" value="TARGET_FF_ARDUINO"/>
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
@@ -979,11 +977,13 @@
                                     
                                     <listOptionValue builtIn="false" value="TARGET_UVISOR_UNSUPPORTED"/>
                                     
-                                    <listOptionValue builtIn="false" value="DEVICE_SPI_ASYNCH=1"/>
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1540561650.89"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_STM32F411xE"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SERIAL=1"/>
+                                    
+                                    <listOptionValue builtIn="false" value="DEVICE_SPI_ASYNCH=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_INTERRUPTIN=1"/>
                                     
@@ -1518,8 +1518,6 @@
                                     
                                     <listOptionValue builtIn="false" value="__CORTEX_M4"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1540033995.27"/>
-                                    
                                     <listOptionValue builtIn="false" value="TARGET_FF_ARDUINO"/>
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
@@ -1536,11 +1534,13 @@
                                     
                                     <listOptionValue builtIn="false" value="TARGET_UVISOR_UNSUPPORTED"/>
                                     
-                                    <listOptionValue builtIn="false" value="DEVICE_SPI_ASYNCH=1"/>
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1540561650.89"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_STM32F411xE"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SERIAL=1"/>
+                                    
+                                    <listOptionValue builtIn="false" value="DEVICE_SPI_ASYNCH=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_INTERRUPTIN=1"/>
                                     

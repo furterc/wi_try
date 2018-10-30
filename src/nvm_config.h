@@ -11,9 +11,11 @@
 #include "caboodle.git/include/caboodle/console.h"
 
 #include "EEP24xx16.h"
+#include "rtc_alarm.h"
 
 #define NVM_OFFSET_WIFICONFIG   0x10
 #define NVM_OFFSET_THRESHOLDS   0x100
+#define NVM_OFFSET_ALARMS       0x200
 
 typedef struct {
     char wifi_ssid[32];         //0  + 32 = 32
@@ -29,6 +31,11 @@ typedef struct {
     int humidLow;
     int humidHigh;
 } sThresholds_t;
+
+typedef struct {
+    sRTCAlarmObj_t lightOn;
+    sRTCAlarmObj_t lightOff;
+} sAlarmTimes_t;
 
 
 class NvmConfig
@@ -50,6 +57,8 @@ public:
     static int setThresholds(sThresholds_t *thresholds);
     static int getThresholds(sThresholds_t *thresholds);
 
+    static int setAlarms(sAlarmTimes_t *alarms);
+    static int getAlarms(sAlarmTimes_t *alarms);
 
     static void wifiSSIDConfig(int argc,char *argv[]);
     static void wifiPasswordConfig(int argc,char *argv[]);
@@ -59,6 +68,8 @@ public:
 
     static void tempThresholdConfig(int argc,char *argv[]);
     static void humidThresholdConfig(int argc,char *argv[]);
+
+    static void lightAlarmConfig(int argc,char *argv[]);
 };
 
 extern const Console::cmd_list_t configureCommands[];

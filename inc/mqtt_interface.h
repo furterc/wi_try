@@ -9,10 +9,9 @@
 #define SRC_MQTT_INTERFACE_H_
 
 #include "mbed.h"
-//#include "easy-connect.h"
 #include "MQTTNetwork.h"
 #include "MQTTmbed.h"
-#include "MQTTClient.h"
+#include "MQTT/MQTTClient.h"
 
 #include "mbed-os/rtos/Thread.h"
 
@@ -20,7 +19,7 @@ enum eMQTTInterface_state {
 	MQTT_UNKNOWN,
 	MQTT_CONNECT,
 	MQTT_CONNECTED,
-	MQTT_SEND,
+	MQTT_FAIL,
 	MQTT_IDLE,
 };
 
@@ -34,17 +33,23 @@ class MQTT_Interface {
 	MQTTNetwork *mMQTTNetwork;
 	MQTT::Client<MQTTNetwork, Countdown> *mClient;
 
+	char *mHostname;
+	uint16_t mPort;
+
+	void (*connectedCallback)(void);
+
 	rtos::Thread work;
 public:
 	virtual ~MQTT_Interface();
 
 
     static void init(MQTTNetwork* network, MQTT::Client<MQTTNetwork, Countdown> *client);
-    static void connect();
+    static void connect(char *ipAddr, uint16_t port);
     static bool isConnected();
-    static void send(uint8_t *buf, int len);
+    static void setConnectedCallback(void (*callback)());
 
-    static void messageArrived(MQTT::MessageData& md);
+    static int publish(const char *topic, uint8_t *buf, int len, bool debug = false);
+    static int subscribe(const char *topic, void (*messageHandler)(MQTT::MessageData &data));
 
     static void run(MQTT_Interface *instance);
 

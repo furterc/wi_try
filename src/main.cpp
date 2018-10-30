@@ -11,7 +11,6 @@
 
 #define MQTTCLIENT_QOS2 1
 
-#include "mqtt_interface.h"
 #include "DHT22.h"
 #include "MQTTNetwork.h"
 #include "MQTTmbed.h"
@@ -25,7 +24,10 @@
 #include "jsmn.h"
 #include "rtc_alarm.h"
 
+#include "mqtt_interface.h"
 #include "LCDPCF8574.h"
+
+DigitalOut led(D9);
 
 
 ESP8266Interface wifi(D8, D2);
@@ -50,6 +52,8 @@ float version = 0.6;
 const char* topic = "mbed";
 
 DHT22 *dht22 = 0;
+
+LCDPCF8574 *lcd = 0;
 
 void scanWiFi(int argc,char *argv[])
 {
@@ -159,19 +163,39 @@ void parseRequestJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
         printInfo("JSON out");
         printf("%s\n" ,  buffer);
 
-        MQTT::Message message;
-        message.qos = MQTT::QOS0;
-        message.retained = false;
-        message.dup = false;
-        message.payload = buffer;
-        message.payloadlen = strlen(buffer);
 
         printInfo("MQTT Publish");
-        if(mClient->publish("mbed", message))
+        if(MQTT_Interface::publish("mbed", (uint8_t *)buffer, strlen(buffer)))
             printf(RED("FAIL\n"));
         else
             printf(GREEN("OK\n"));
-    }
+    } else if (jsoneq(msg, &tokens[2], "a1") == 0) //alarm request
+        {
+            sAlarmTimes_t alarms;
+            NvmConfig::getAlarms(&alarms);
+
+            char buffer[64];
+            memset(buffer, 0, 64);
+            snprintf(buffer, 64,
+                    "{"
+                    "\"onHour\":%d,"
+                    "\"onMinute\":%d,"
+                    "\"offHour\":%d,"
+                    "\"offMinute\":%d"
+                    "}", alarms.lightOn.hour,
+                    alarms.lightOn.minute,
+                    alarms.lightOff.hour,
+                    alarms.lightOff.minute);
+
+            printInfo("JSON out");
+            printf("%s\n" ,  buffer);
+
+            printInfo("MQTT Publish");
+            if(MQTT_Interface::publish("mbed", (uint8_t *)buffer, strlen(buffer)))
+                printf(RED("FAIL\n"));
+            else
+                printf(GREEN("OK\n"));
+        }
 }
 
 
@@ -349,6 +373,18 @@ void messageIn(MQTT::MessageData& md)
 
 }
 
+static void ligthAlarm(uint8_t state)
+{
+    printf("ledState: %d\n", state);
+    led = state;
+}
+
+static void mqttConnected(void)
+{
+    const char *topic = "mbed";
+    MQTT_Interface::subscribe(topic, messageIn);
+}
+
 int main()
 {
 	printf("\n\nWiTry Demo\n");
@@ -366,19 +402,9 @@ int main()
 
 	printf(CYAN_B("\nWiFi example\n\n"));
 
-	I2C i2c(D14, D15);
-
-	printInfo("PCF8547");
-	printf("testing\n");
-	LCDPCF8574 lcd(&i2c, 0);
-
-	lcd.init(LCD_DISP_ON);
-	lcd.led(0);
-	lcd.gotoxy(0, 4);
-	lcd.puts("hello world!");
-
+	I2C i2cEEP(D14, D15);
 	printInfo("EEPROM");
-	eeprom = new EEP24xx16(i2c);
+	eeprom = new EEP24xx16(i2cEEP);
 	if(!eeprom->getMemorySize())
 	    printf(RED("FAIL\n"));
 	else
@@ -387,13 +413,17 @@ int main()
         NvmConfig::init(eeprom);
 	}
 
-//
-////	lcd.setAddress(0,0);
-//	lcd.putc('p');
-////	lcd.printf("hello");
-//	lcd.setBacklight(TextLCD::LightOff);
-////	lcd.putc()
-//
+    I2C i2cLCD(D3, D6);
+    printInfo("PCF8547");
+
+    lcd = new LCDPCF8574(&i2cLCD, 0);
+    lcd->init(LCD_DISP_ON);
+    printf(GREEN("Initialized\n"));
+
+    lcd->led(0);
+    lcd->gotoxy(4, 0);
+    lcd->puts("hello world!");
+
 	static sNetworkCredentials_t wifiCredentials;
 	NvmConfig::getWifiCredentials(&wifiCredentials);
 
@@ -412,54 +442,20 @@ int main()
 
 	MQTTNetwork mqttNetwork(&wifi);
 	MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
-	mClient = &client;
-	printInfo("MQTT CONNECT");
-	printf("%s:%d\n", wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
+    MQTT_Interface::init(&mqttNetwork, &client);
 
-	int rc = mqttNetwork.connect(wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
-	printInfo("MQTT CONNECT");
-	if(!rc)
-	{
-	    printf(GREEN("OK\n"));
-	}
-	else
-	{
-	    printf(RED("FAIL\n"));
-	}
+    MQTT_Interface::connect(wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
+    MQTT_Interface::setConnectedCallback(mqttConnected);
 
-	MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
-	data.MQTTVersion = 3;
-	data.clientID.cstring = (char*)"mbed-sample";
-	//      data.username.cstring = "testuser";
-	//      data.password.cstring = "testpassword";
-	if ((rc = client.connect(data)) != 0)
-	    printf("rc from MQTT connect is %d\r\n", rc);
+    const char *topic = "mbed";
 
-	const char* topic = "mbed";
-	printInfo("MQTT Sub Topic");
-	printf("%s : ", topic);
-	if ((rc = client.subscribe(topic, MQTT::QOS2, messageIn)) != 0)
-	    printf(RED("FAIL\n"));
-	else
-	    printf(GREEN("OK\n"));
-
-
-//	MQTT_Interface::init(&mqttNetwork, &client);
-//	MQTT_Interface::connect();
-
-    MQTT::Message message;
-
-    sRTCAlarmObj_t alarmOn;
-    alarmOn.hour = 0;
-    alarmOn.minute = 1;
-
-    sRTCAlarmObj_t alarmOff;
-    alarmOff.hour = 0;
-    alarmOff.minute = 3;
+    static sAlarmTimes_t alarms;
+    NvmConfig::getAlarms(&alarms);
 
     RTC_Alarm testAlarm;
 
-    testAlarm.setAlarm(&alarmOn, &alarmOff);
+    testAlarm.setAlarm(&alarms.lightOn, &alarms.lightOff);
+    testAlarm.setTiggerCallback(ligthAlarm);
 
     while (1)
 	{
@@ -473,16 +469,22 @@ int main()
     	if(inCount > 60)
     	{
     	    inCount = 0;
-    	    if(MQTT_Interface::isConnected())
+//    	    if(MQTT_Interface::isConnected())
     	    {
     	        uint16_t temp = 0;
     	        uint16_t humid = 0;
+
     	        sample_dht22(temp, humid);
-    	        printInfo("Temperature");
+    	        printInfo("Temperature");// while (arrivedcount < 1)
     	        printf("%d\n", temp);
     	        printInfo("Humidity");
     	        printf("%d\n", humid);
 
+    	        char line[20];
+    	        memset(line, 0, 20);
+    	        snprintf(line, 20, "temp: %d humid %d", temp ,humid);
+    	        lcd->gotoxy(0, 4);
+    	        lcd->puts(line);
 
     	        char buffer[64];
     	        memset(buffer, 0, 64);
@@ -492,22 +494,7 @@ int main()
     	                "\"humid\":%d"
     	                "}", temp, humid);
 
-    	        printInfo("JSON out");
-    	        printf("%s\n" ,  buffer);
-
-
-    	        message.qos = MQTT::QOS0;
-    	        message.retained = false;
-    	        message.dup = false;
-    	        message.payload = buffer;
-    	        message.payloadlen = strlen(buffer);
-
-    	        printInfo("MQTT Publish");
-    	        if(client.publish(topic, message))
-    	            printf(RED("FAIL\n"));
-    	        else
-    	            printf(GREEN("OK\n"));
-//    	        MQTT_Interface::send((uint8_t *).c_str(), strlen(str.c_str()));
+    	        MQTT_Interface::publish(topic, (uint8_t*)buffer, strlen(buffer));
     	    }
     	}
 	}
