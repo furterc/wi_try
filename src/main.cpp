@@ -464,7 +464,6 @@ int main()
 
         inCount++;
         wait(0.5);
-    	client.yield(3000);
 
     	if(inCount > 60)
     	{
