@@ -935,6 +935,8 @@
 									
                                     <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
                                     
+                                    <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
+                                    
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2CSLAVE=1"/>
@@ -985,8 +987,6 @@
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_INTERRUPTIN=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1540934777.06"/>
-                                    
                                     <listOptionValue builtIn="false" value="TARGET_CORTEX"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2C=1"/>
@@ -1009,7 +1009,7 @@
                                     
                                     <listOptionValue builtIn="false" value="TARGET_STM"/>
                                     
-                                    <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1541847963.31"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
                                     
@@ -1492,6 +1492,8 @@
 									
                                     <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
                                     
+                                    <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
+                                    
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2CSLAVE=1"/>
@@ -1542,8 +1544,6 @@
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_INTERRUPTIN=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1540934777.06"/>
-                                    
                                     <listOptionValue builtIn="false" value="TARGET_CORTEX"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2C=1"/>
@@ -1566,7 +1566,7 @@
                                     
                                     <listOptionValue builtIn="false" value="TARGET_STM"/>
                                     
-                                    <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1541847963.31"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
                                     
