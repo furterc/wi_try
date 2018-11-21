@@ -935,8 +935,6 @@
 									
                                     <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
-                                    
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2CSLAVE=1"/>
@@ -966,6 +964,8 @@
                                     <listOptionValue builtIn="false" value="TARGET_FF_ARDUINO"/>
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
+                                    
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1542825078.04"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
                                     
@@ -1009,7 +1009,7 @@
                                     
                                     <listOptionValue builtIn="false" value="TARGET_STM"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1541847963.31"/>
+                                    <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
                                     
@@ -1492,8 +1492,6 @@
 									
                                     <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
-                                    
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2CSLAVE=1"/>
@@ -1523,6 +1521,8 @@
                                     <listOptionValue builtIn="false" value="TARGET_FF_ARDUINO"/>
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
+                                    
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1542825078.04"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
                                     
@@ -1566,7 +1566,7 @@
                                     
                                     <listOptionValue builtIn="false" value="TARGET_STM"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1541847963.31"/>
+                                    <listOptionValue builtIn="false" value="FEATURE_LOWPAN_ROUTER=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SERIAL_FC=1"/>
                                     

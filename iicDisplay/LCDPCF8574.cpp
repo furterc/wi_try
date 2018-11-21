@@ -184,7 +184,7 @@ void LCDPCF8574::command(uint8_t cmd)
 void LCDPCF8574::toggleEnable()
 {
     setOutputPinHigh(LCD_E_PIN);
-    HAL_Delay(LCD_EN_DELAY);
+    wait_ms(LCD_EN_DELAY);
     setOutputPinLow(LCD_E_PIN);
 }
 
@@ -263,7 +263,7 @@ uint8_t LCDPCF8574::waitbusy()
     while ( (c=read(0)) & (1<<LCD_BUSY)) {}
 
     /* the address counter is updated 4us after the busy flag is cleared */
-    HAL_Delay(1);
+    wait_us(100);
 
     /* now read the address counter */
     return (read(0));  // return address counter

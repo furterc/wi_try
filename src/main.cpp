@@ -7,6 +7,8 @@
 
 #include "mbed.h"
 
+#include "linked_list.h"
+
 #define logMessage printf
 
 #define MQTTCLIENT_QOS2 1
@@ -25,9 +27,10 @@
 #include "rtc_alarm.h"
 
 #include "mqtt_interface.h"
-#include "LCDPCF8574.h"
 
-#include "RS485.h"
+#include "LCDPCF8574.h"
+#include "LCDController.h"
+
 
 DigitalOut led(D9);
 
@@ -36,18 +39,6 @@ ESP8266Interface wifi(D8, D2);
 TCPSocket socket;
 
 EEP24xx16 *eeprom = 0;
-
-typedef struct
-{
-    uint8_t addr;
-    uint8_t setGET;
-    uint8_t digitalIn;
-    uint8_t digitalOut;
-    uint8_t pwm[4];
-} sNode485Packet_t;
-
-sNode485Packet_t nodes[1];
-int nodeCount = 1;
 
 /* Console */
 Serial pc(SERIAL_TX, SERIAL_RX, 115200);
@@ -69,69 +60,11 @@ const char* topic = "mbed";
 DHT22 *dht22 = 0;
 
 LCDPCF8574 *lcd = 0;
+LCDController *lcdController = 0;
+
 
 void scanWiFi(int argc,char *argv[])
 {
-
-}
-
-void rs485dataIn(uint8_t *data, uint8_t len)
-{
-    if(len != sizeof(sNode485Packet_t))
-    {
-        printf("rs485 - invaled len\n");
-    }
-
-    printf("rs485 - data in\n");
-    diag_dump_buf(data, len);
-    memcpy(&nodes[0], data, sizeof(sNode485Packet_t));
-}
-
-void dutyCycle_debug(int argc,char *argv[])
-{
-    uint8_t duties[4];
-    memcpy(duties, nodes[0].pwm, 4);
-    if(argc == 1)
-    {
-        for(uint8_t i = 0; i < 4; i++)
-            printf("DutyCycle %d = %d\n", i+1, duties[i]);
-
-        return;
-    }
-
-    if(argc != 3)
-    {
-        printf(YELLOW("dc <channel> <duty>\n"));
-        return;
-    }
-
-    int channel = atoi(argv[1]);
-    if(channel < 1 || channel > 4)
-    {
-        printf(YELLOW("0 < channel < 5\n"));
-        return;
-    }
-
-    int duty = atoi(argv[2]);
-    if(duty < 0 || duty > 100)
-    {
-        printf(YELLOW("0 < duty =< 100\n"));
-        return;
-    }
-
-    nodes[0].pwm[channel-1] = duty;
-    RS485::send((uint8_t *)&nodes[0], sizeof(sNode485Packet_t));
-}
-
-void test485(int argc,char *argv[])
-{
-
-    sNode485Packet_t packet;
-    memset(&packet, 0x00, sizeof(sNode485Packet_t));
-    packet.addr = 1;
-    packet.setGET = 1;
-
-    RS485::send((uint8_t *)&packet, sizeof(sNode485Packet_t));
 
 }
 
@@ -160,8 +93,6 @@ const Console::cmd_list_t mainCommands[] =
 {
       {"MAIN"    ,0,0,0},
       {"ws",            "",                   "Scan for WiFi Devices", scanWiFi},
-	  {"tx",          "",                   "Test485", test485},
-	  {"dc",          "",                   "Node dutyCycle", dutyCycle_debug},
 	  {"ss",            "",                   "Sample Sensors", sensorSample},
       {0,0,0,0}
 };
@@ -458,11 +389,6 @@ int main()
 	Console::init(&pc, "wi_try");
 	wait(1);
 
-	DigitalOut rs485writeEnable(PB_12);
-	RS485::init(&rs485uart, &rs485writeEnable);
-
-	RS485::setReceiveCallback(rs485dataIn);
-
 	printf(CYAN_B("\nWiFi example\n\n"));
 
 	I2C i2cEEP(D14, D15);
@@ -480,12 +406,9 @@ int main()
     printInfo("PCF8547");
 
     lcd = new LCDPCF8574(&i2cLCD, 0);
-    lcd->init(LCD_DISP_ON);
-    printf(GREEN("Initialized\n"));
+    lcdController = new LCDController(lcd);
 
-    lcd->led(0);
-    lcd->gotoxy(4, 0);
-    lcd->puts("hello world!");
+    lcdController->logLine((char *)"LCD Init");
 
 	static sNetworkCredentials_t wifiCredentials;
 	NvmConfig::getWifiCredentials(&wifiCredentials);
@@ -497,11 +420,17 @@ int main()
 	printInfo("WIFI Connection");
 	if (ret != 0) {
 	    printf(RED("FAIL\n"));
+	    lcdController->logLine((char *)"WiFi Connect Fail");
 	    return -1;
 	}
 	printf(GREEN("OK\n"));
+	lcdController->logLine((char *)"WiFi Connect OK");
 
 	printWifiInfo();
+
+	char ip[20];
+	snprintf(ip, 20, "IP: %s", wifi.get_ip_address());
+	lcdController->logLine(ip);
 
 	MQTTNetwork mqttNetwork(&wifi);
 	MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
@@ -522,6 +451,8 @@ int main()
 
     while (1)
 	{
+        lcdController->logRun();
+
         testAlarm.checkAlarm();
         static int inCount = 1200;
 
@@ -545,8 +476,9 @@ int main()
     	        char line[20];
     	        memset(line, 0, 20);
     	        snprintf(line, 20, "temp: %d humid %d", temp ,humid);
-    	        lcd->gotoxy(0, 4);
-    	        lcd->puts(line);
+    	        lcdController->logLine(line);
+//    	        lcd->gotoxy(0, 4);
+//    	        lcd->puts(line);
 
     	        char buffer[64];
     	        memset(buffer, 0, 64);
@@ -563,3 +495,4 @@ int main()
 
 	return 1;
 }
+
