@@ -27,18 +27,22 @@
 #include "rtc_alarm.h"
 
 #include "mqtt_interface.h"
+#include "RS485.h"
 
-#include "LCDPCF8574.h"
-#include "LCDController.h"
+#include "cmsg_control_one.h"
+
+//#include "LCDPCF8574.h"
+//#include "LCDController.h"
 
 
 DigitalOut led(D9);
-
 
 ESP8266Interface wifi(D8, D2);
 TCPSocket socket;
 
 EEP24xx16 *eeprom = 0;
+
+CMsgControlOne *controlOne = 0;
 
 /* Console */
 Serial pc(SERIAL_TX, SERIAL_RX, 115200);
@@ -59,8 +63,32 @@ const char* topic = "mbed";
 
 DHT22 *dht22 = 0;
 
-LCDPCF8574 *lcd = 0;
-LCDController *lcdController = 0;
+//LCDPCF8574 *lcd = 0;
+//LCDController *lcdController = 0;
+
+typedef struct
+{
+    uint8_t addr;
+    uint8_t setGET;
+    uint8_t digitalIn;
+    uint8_t digitalOut;
+    uint8_t pwm[4];
+} sNode485Packet_t;
+
+sNode485Packet_t nodes[1];
+int nodeCount = 1;
+
+void rs485dataIn(uint8_t *data, int len)
+{
+    if(len != sizeof(sNode485Packet_t))
+    {
+        printf("rs485 - invaled len\n");
+    }
+
+    printf("rs485 - data in\n");
+    diag_dump_buf(data, len);
+}
+
 
 
 void scanWiFi(int argc,char *argv[])
@@ -89,11 +117,44 @@ void sensorSample(int argc,char *argv[])
 	printf("humidity   : %d\n", humid);
 }
 
+void rs485Send(int argc,char *argv[])
+{
+    if(argc == 1)
+    {
+        printf("try to send msg\n");
+
+
+
+        uint8_t data[32];
+        uint32_t dataLen = 32;
+        dataLen = controlOne->getRequestBytes(data, dataLen);
+        printf("dataLen %d\n", dataLen);
+
+        diag_dump_buf(data, dataLen);
+        RS485::send(data, dataLen);
+        return;
+    }
+
+    if(argc != 2)
+    {
+        printf("argc != 2\n");
+        return;
+    }
+
+    uint8_t data[32];
+    uint32_t len = controlOne->getSetMessage(data, 32);
+
+
+    printf("len = %d\n", len);
+    RS485::send(data, len);
+}
+
 const Console::cmd_list_t mainCommands[] =
 {
       {"MAIN"    ,0,0,0},
       {"ws",            "",                   "Scan for WiFi Devices", scanWiFi},
 	  {"ss",            "",                   "Sample Sensors", sensorSample},
+	  {"rs",            "",                   "RS485 Send", rs485Send},
       {0,0,0,0}
 };
 
@@ -374,6 +435,17 @@ static void mqttConnected(void)
     MQTT_Interface::subscribe(topic, messageIn);
 }
 
+int sampleCmsgData(sCmsgControlOne_t *msg)
+{
+    if(!msg)
+        return -1;
+
+    memset(msg->pwm, 100, 4);
+    msg->digitalOut = 0x0F;
+
+    return 0;
+}
+
 int main()
 {
 	printf("\n\nWiTry Demo\n");
@@ -386,8 +458,25 @@ int main()
 
 	dht22 = new DHT22(A0);
 
+//    I2C i2cLCD(D3, D6);
+//    printInfo("PCF8547");
+//	lcd = new LCDPCF8574(&i2cLCD, 0);
+//	lcdController = new LCDController(lcd);
+
+//	lcdController->logLine("version: 0x%08X", MBED_CONF_APP_VERSION);
+
+//    lcdController->logLine("%s\n\n", SWdatetime);
+
+    /* Clear the screen */
+    printf("%c%s", 0x1B, "[2J");
+
 	Console::init(&pc, "wi_try");
 	wait(1);
+
+	DigitalOut rs485writeEnable(PB_12);
+	RS485::init(&rs485uart, &rs485writeEnable);
+
+	RS485::setReceiveCallback(rs485dataIn);
 
 	printf(CYAN_B("\nWiFi example\n\n"));
 
@@ -402,95 +491,59 @@ int main()
         NvmConfig::init(eeprom);
 	}
 
-    I2C i2cLCD(D3, D6);
-    printInfo("PCF8547");
-
-    lcd = new LCDPCF8574(&i2cLCD, 0);
-    lcdController = new LCDController(lcd);
-
-    lcdController->logLine((char *)"LCD Init");
 
 	static sNetworkCredentials_t wifiCredentials;
 	NvmConfig::getWifiCredentials(&wifiCredentials);
 
-	printInfo("WIFI");
-	printf(GREEN("Connecting...\n"));
-	int ret = wifi.connect(wifiCredentials.wifi_ssid, wifiCredentials.wifi_pw, NSAPI_SECURITY_WPA_WPA2);
+    controlOne = new CMsgControlOne(1, NODE_CONTROL_ONE);
+    controlOne->setSampleCallback(sampleCmsgData);
+//
+//	printInfo("WIFI");
+//	printf(GREEN("Connecting...\n"));
+////	const char* wssid = "area51";
+////	const char* wpw = "golf1900";
+////	int ret = wifi.connect(wssid, wpw, NSAPI_SECURITY_WPA_WPA2);
+//	int ret = wifi.connect(wifiCredentials.wifi_ssid, wifiCredentials.wifi_pw, NSAPI_SECURITY_WPA_WPA2);
+//
+//	printInfo("WIFI Connection");
+//	if (ret != 0) {
+//	    printf("wiri ret: 0x%02X = %d\n", ret, ret);
+//	    printf(RED("FAIL\n"));
+////	    lcdController->logLine((char *)"WiFi Connect Fail");
+//	    return -1;
+//	}
+//	printf(GREEN("OK\n"));
+////	lcdController->logLine((char *)"WiFi");
+////	lcdController->logLine(wifiCredentials.wifi_ssid);
+//
+//	printWifiInfo();
 
-	printInfo("WIFI Connection");
-	if (ret != 0) {
-	    printf(RED("FAIL\n"));
-	    lcdController->logLine((char *)"WiFi Connect Fail");
-	    return -1;
-	}
-	printf(GREEN("OK\n"));
-	lcdController->logLine((char *)"WiFi Connect OK");
-
-	printWifiInfo();
-
-	char ip[20];
-	snprintf(ip, 20, "IP: %s", wifi.get_ip_address());
-	lcdController->logLine(ip);
-
-	MQTTNetwork mqttNetwork(&wifi);
-	MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
-    MQTT_Interface::init(&mqttNetwork, &client);
-
-    MQTT_Interface::connect(wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
-    MQTT_Interface::setConnectedCallback(mqttConnected);
-
-    const char *topic = "mbed";
-
-    static sAlarmTimes_t alarms;
-    NvmConfig::getAlarms(&alarms);
-
-    RTC_Alarm testAlarm;
-
-    testAlarm.setAlarm(&alarms.lightOn, &alarms.lightOff);
-    testAlarm.setTiggerCallback(ligthAlarm);
+//	lcdController->logLine("IP: %s", wifi.get_ip_address());
+//
+//	MQTTNetwork mqttNetwork(&wifi);
+//	MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
+//    MQTT_Interface::init(&mqttNetwork, &client);
+//
+//    MQTT_Interface::connect(wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
+//    MQTT_Interface::setConnectedCallback(mqttConnected);
+//
+//    const char *topic = "mbed";
+//
+//    static sAlarmTimes_t alarms;
+//    NvmConfig::getAlarms(&alarms);
+//
+//    RTC_Alarm testAlarm;
+//
+//    testAlarm.setAlarm(&alarms.lightOn, &alarms.lightOff);
+//    testAlarm.setTiggerCallback(ligthAlarm);
 
     while (1)
 	{
-        lcdController->logRun();
+        wait(1);
+//        lcdController->logRun();
 
-        testAlarm.checkAlarm();
-        static int inCount = 1200;
-
-        inCount++;
-        wait(0.5);
-
-    	if(inCount > 60)
-    	{
-    	    inCount = 0;
-//    	    if(MQTT_Interface::isConnected())
-    	    {
-    	        uint16_t temp = 0;
-    	        uint16_t humid = 0;
-
-    	        sample_dht22(temp, humid);
-    	        printInfo("Temperature");// while (arrivedcount < 1)
-    	        printf("%d\n", temp);
-    	        printInfo("Humidity");
-    	        printf("%d\n", humid);
-
-    	        char line[20];
-    	        memset(line, 0, 20);
-    	        snprintf(line, 20, "temp: %d humid %d", temp ,humid);
-    	        lcdController->logLine(line);
-//    	        lcd->gotoxy(0, 4);
-//    	        lcd->puts(line);
-
-    	        char buffer[64];
-    	        memset(buffer, 0, 64);
-    	        snprintf(buffer, 64,
-    	                "{"
-    	                "\"temp\":%d,"
-    	                "\"humid\":%d"
-    	                "}", temp, humid);
-
-    	        MQTT_Interface::publish(topic, (uint8_t*)buffer, strlen(buffer));
-    	    }
-    	}
+//        testAlarm.checkAlarm();
+//    	        MQTT_Interface::publish(topic, (uint8_t*)buffer, strlen(buffer));
 	}
 
 	return 1;

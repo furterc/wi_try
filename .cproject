@@ -457,6 +457,8 @@
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-os/rtos/TARGET_CORTEX/rtx5/Source}&quot;"/>
 								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/cmsg}&quot;"/>
+								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/src}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-jsmn}&quot;"/>
@@ -924,6 +926,8 @@
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-os/rtos/TARGET_CORTEX/rtx5/Source}&quot;"/>
 								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/cmsg}&quot;"/>
+								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/src}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-jsmn}&quot;"/>
@@ -934,6 +938,8 @@
 								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.496389156" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
 									
                                     <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
+                                    
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1549143495.39"/>
                                     
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
@@ -964,8 +970,6 @@
                                     <listOptionValue builtIn="false" value="TARGET_FF_ARDUINO"/>
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
-                                    
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1542825078.04"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
                                     
@@ -1481,6 +1485,8 @@
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-os/rtos/TARGET_CORTEX/rtx5/Source}&quot;"/>
 								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/cmsg}&quot;"/>
+								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/src}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-jsmn}&quot;"/>
@@ -1491,6 +1497,8 @@
 								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.1395532696" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
 									
                                     <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
+                                    
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1549143495.39"/>
                                     
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
@@ -1521,8 +1529,6 @@
                                     <listOptionValue builtIn="false" value="TARGET_FF_ARDUINO"/>
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
-                                    
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1542825078.04"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
                                     
