@@ -53,10 +53,9 @@ void RS485::handleByte(uint8_t byte)
 
     if(len > 0)
     {
-        printf("frame in ");
         uint8_t data[64];
         memcpy(data, framer->buffer(), len);
-        diag_dump_buf(data, len);
+
         if(__instance->cb)
             __instance-> cb(data, (uint8_t)len);
     }
@@ -80,8 +79,8 @@ void RS485::send(uint8_t *data, int len)
     __instance->mSerial->write(framedData, frameLen);
     wait(0.005);
     __instance->mWriteEnable->write(0);
-    printf("dataOut: ");
-    diag_dump_buf(framedData, frameLen);
+//    printf("dataOut: ");
+//    diag_dump_buf(framedData, frameLen);
 }
 
 void RS485::setReceiveCallback(void (*callback)(uint8_t *data, int len))
@@ -89,6 +88,3 @@ void RS485::setReceiveCallback(void (*callback)(uint8_t *data, int len))
     if(callback)
         __instance->cb = callback;
 }
-
-
-

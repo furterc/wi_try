@@ -939,8 +939,6 @@
 									
                                     <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1549143495.39"/>
-                                    
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2CSLAVE=1"/>
@@ -1030,6 +1028,8 @@
                                     <listOptionValue builtIn="false" value="DEVICE_SPI=1"/>
                                     
                                     <listOptionValue builtIn="false" value="USB_STM_HAL"/>
+                                    
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1549703391.31"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SPISLAVE=1"/>
                                     
@@ -1498,8 +1498,6 @@
 									
                                     <listOptionValue builtIn="false" value="FEATURE_NANOSTACK=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1549143495.39"/>
-                                    
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2CSLAVE=1"/>
@@ -1589,6 +1587,8 @@
                                     <listOptionValue builtIn="false" value="DEVICE_SPI=1"/>
                                     
                                     <listOptionValue builtIn="false" value="USB_STM_HAL"/>
+                                    
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1549703391.31"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SPISLAVE=1"/>
                                     

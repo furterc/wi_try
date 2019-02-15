@@ -29,7 +29,7 @@
 #include "mqtt_interface.h"
 #include "RS485.h"
 
-#include "cmsg_control_one.h"
+#include "control_one.h"
 
 //#include "LCDPCF8574.h"
 //#include "LCDController.h"
@@ -42,7 +42,10 @@ TCPSocket socket;
 
 EEP24xx16 *eeprom = 0;
 
-CMsgControlOne *controlOne = 0;
+CControlOne controlOne(1);
+CControlOne controlTwo(2);
+
+CControlOne *controlNodes[] = { &controlOne, &controlTwo, 0};
 
 /* Console */
 Serial pc(SERIAL_TX, SERIAL_RX, 115200);
@@ -66,30 +69,25 @@ DHT22 *dht22 = 0;
 //LCDPCF8574 *lcd = 0;
 //LCDController *lcdController = 0;
 
-typedef struct
-{
-    uint8_t addr;
-    uint8_t setGET;
-    uint8_t digitalIn;
-    uint8_t digitalOut;
-    uint8_t pwm[4];
-} sNode485Packet_t;
-
-sNode485Packet_t nodes[1];
-int nodeCount = 1;
-
 void rs485dataIn(uint8_t *data, int len)
 {
-    if(len != sizeof(sNode485Packet_t))
-    {
-        printf("rs485 - invaled len\n");
-    }
-
-    printf("rs485 - data in\n");
+    printf("rs485 in   ");
     diag_dump_buf(data, len);
+
+    uint8_t idx = 0;
+    CControlOne *node = controlNodes[idx];
+
+    while(node)
+    {
+        int handleBytes = node->handleBytes(data, len);
+        if(handleBytes == C1_HANDLE_SET_BYTES)
+        {
+            node->updateValues(data, len);
+            CControlOne::printStatus(node);
+        }
+        node = controlNodes[++idx];
+    }
 }
-
-
 
 void scanWiFi(int argc,char *argv[])
 {
@@ -117,36 +115,95 @@ void sensorSample(int argc,char *argv[])
 	printf("humidity   : %d\n", humid);
 }
 
-void rs485Send(int argc,char *argv[])
+
+void requestNodeStatus(int argc,char *argv[])
 {
-    if(argc == 1)
-    {
-        printf("try to send msg\n");
-
-
-
-        uint8_t data[32];
-        uint32_t dataLen = 32;
-        dataLen = controlOne->getRequestBytes(data, dataLen);
-        printf("dataLen %d\n", dataLen);
-
-        diag_dump_buf(data, dataLen);
-        RS485::send(data, dataLen);
-        return;
-    }
-
     if(argc != 2)
     {
-        printf("argc != 2\n");
+        printf("rns <id>");
         return;
     }
 
-    uint8_t data[32];
-    uint32_t len = controlOne->getSetMessage(data, 32);
+    int nodeId = atoi(argv[1]);
+    uint8_t data[16];
+    uint32_t dataLen = 0;
+
+    switch (nodeId) {
+        case 1:
+            dataLen  = controlOne.getHeaderBytes(0, data, 16);
+            break;
+        case 2:
+            dataLen  = controlTwo.getHeaderBytes(0, data, 16);
+            break;
+        default:
+            printf("invalid node id\n");
+            return;
+            break;
+    }
+
+//    printf("data out : ");
+//    diag_dump_buf(data, dataLen);
+    RS485::send(data, dataLen);
+    return;
+}
+
+void rs485Send(int argc,char *argv[])
+{
+    if(argc == 2)
+    {
+        int digitalOut = atoi(argv[1]);
+        if(digitalOut < 0 || digitalOut > 15)
+        {
+            printf("0 < digitalOut < 15\n");
+            return;
+        }
+
+        uint8_t data[32];
+        controlOne.updateDigitalOut(digitalOut);
+        int len = controlOne.getSetBytes(data, 32);
+        RS485::send(data, len);
+
+        controlTwo.updateDigitalOut(digitalOut);
+        len = controlTwo.getSetBytes(data, 32);
+        RS485::send(data, len);
+
+        return;
+    }
+
+    if(argc == 5)
+    {
+        printf("set pwms\n");
+        uint8_t pwm0 = (uint8_t)atoi(argv[1]);
+        uint8_t pwm1 = (uint8_t)atoi(argv[2]);
+        uint8_t pwm2 = (uint8_t)atoi(argv[3]);
+        uint8_t pwm3 = (uint8_t)atoi(argv[4]);
+
+        uint8_t pwms[4] = {pwm0, pwm1, pwm2, pwm3};
+
+        for(int i = 0; i < 4; i++)
+        {
+            if(pwms[i] > 100)
+            {
+                printf("0 < pwm < 100\n");
+                return;
+            }
+        }
+
+        uint8_t data[32];
 
 
-    printf("len = %d\n", len);
-    RS485::send(data, len);
+        controlOne.setPwm(pwms, 4);
+        int len = controlOne.getSetBytes(data, 32);
+        RS485::send(data, len);
+
+        controlTwo.setPwm(pwms, 4);
+        len = controlTwo.getSetBytes(data, 32);
+        RS485::send(data, len);
+
+        return;
+
+    }
+
 }
 
 const Console::cmd_list_t mainCommands[] =
@@ -155,6 +212,7 @@ const Console::cmd_list_t mainCommands[] =
       {"ws",            "",                   "Scan for WiFi Devices", scanWiFi},
 	  {"ss",            "",                   "Sample Sensors", sensorSample},
 	  {"rs",            "",                   "RS485 Send", rs485Send},
+	  {"rns",            "",                   "Request Node Status", requestNodeStatus},
       {0,0,0,0}
 };
 
@@ -435,17 +493,6 @@ static void mqttConnected(void)
     MQTT_Interface::subscribe(topic, messageIn);
 }
 
-int sampleCmsgData(sCmsgControlOne_t *msg)
-{
-    if(!msg)
-        return -1;
-
-    memset(msg->pwm, 100, 4);
-    msg->digitalOut = 0x0F;
-
-    return 0;
-}
-
 int main()
 {
 	printf("\n\nWiTry Demo\n");
@@ -495,8 +542,7 @@ int main()
 	static sNetworkCredentials_t wifiCredentials;
 	NvmConfig::getWifiCredentials(&wifiCredentials);
 
-    controlOne = new CMsgControlOne(1, NODE_CONTROL_ONE);
-    controlOne->setSampleCallback(sampleCmsgData);
+//    controlOne->setSampleCallback(sampleCmsgData);
 //
 //	printInfo("WIFI");
 //	printf(GREEN("Connecting...\n"));
