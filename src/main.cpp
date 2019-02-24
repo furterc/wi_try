@@ -47,6 +47,8 @@ CControlOne controlTwo(2);
 
 CControlOne *controlNodes[] = { &controlOne, &controlTwo, 0};
 
+CNode *myNodes[] = {&controlOne, &controlTwo, 0};
+
 /* Console */
 Serial pc(SERIAL_TX, SERIAL_RX, 115200);
 
