@@ -31,6 +31,9 @@
 #include "LCDPCF8574.h"
 #include "LCDController.h"
 
+#include "RS485.h"
+#include "control_one.h"
+
 
 DigitalOut led(D9);
 
@@ -39,6 +42,13 @@ ESP8266Interface wifi(D8, D2);
 TCPSocket socket;
 
 EEP24xx16 *eeprom = 0;
+
+CControlOne controlOne(1);
+CControlOne controlTwo(2);
+
+CControlOne *controlNodes[] = { &controlOne, &controlTwo, 0};
+
+CNode *myNodes[] = {&controlOne, &controlTwo, 0};
 
 /* Console */
 Serial pc(SERIAL_TX, SERIAL_RX, 115200);
@@ -61,6 +71,26 @@ DHT22 *dht22 = 0;
 
 LCDPCF8574 *lcd = 0;
 LCDController *lcdController = 0;
+
+void rs485dataIn(uint8_t *data, int len)
+{
+    printf("rs485 in   ");
+    diag_dump_buf(data, len);
+
+    uint8_t idx = 0;
+    CControlOne *node = controlNodes[idx];
+
+    while(node)
+    {
+        int handleBytes = node->handleBytes(data, len);
+        if(handleBytes == C1_HANDLE_SET_BYTES)
+        {
+            node->updateValues(data, len);
+            CControlOne::printStatus(node);
+        }
+        node = controlNodes[++idx];
+    }
+}
 
 
 void scanWiFi(int argc,char *argv[])
@@ -89,11 +119,166 @@ void sensorSample(int argc,char *argv[])
 	printf("humidity   : %d\n", humid);
 }
 
+void requestNodeStatus(int argc,char *argv[])
+{
+    if(argc != 2)
+    {
+        printf("rns <id>");
+        return;
+    }
+
+    int nodeId = atoi(argv[1]);
+    uint8_t data[16];
+    uint32_t dataLen = 0;
+
+    switch (nodeId) {
+        case 1:
+            dataLen  = controlOne.getHeaderBytes(0, data, 16);
+            break;
+        case 2:
+            dataLen  = controlTwo.getHeaderBytes(0, data, 16);
+            break;
+        default:
+            printf("invalid node id\n");
+            return;
+            break;
+    }
+
+//    printf("data out : ");
+//    diag_dump_buf(data, dataLen);
+    RS485::send(data, dataLen);
+    return;
+}
+
+void rs485Send(int argc,char *argv[])
+{
+    if(argc == 2)
+    {
+        int digitalOut = atoi(argv[1]);
+        if(digitalOut < 0 || digitalOut > 15)
+        {
+            printf("0 < digitalOut < 15\n");
+            return;
+        }
+
+        uint8_t data[32];
+        controlOne.updateDigitalOut(digitalOut);
+        int len = controlOne.getSetBytes(data, 32);
+        RS485::send(data, len);
+
+        controlTwo.updateDigitalOut(digitalOut);
+        len = controlTwo.getSetBytes(data, 32);
+        RS485::send(data, len);
+
+        return;
+    }
+
+    if(argc == 5)
+    {
+        printf("set pwms\n");
+        uint8_t pwm0 = (uint8_t)atoi(argv[1]);
+        uint8_t pwm1 = (uint8_t)atoi(argv[2]);
+        uint8_t pwm2 = (uint8_t)atoi(argv[3]);
+        uint8_t pwm3 = (uint8_t)atoi(argv[4]);
+
+        uint8_t pwms[4] = {pwm0, pwm1, pwm2, pwm3};
+
+        for(int i = 0; i < 4; i++)
+        {
+            if(pwms[i] > 100)
+            {
+                printf("0 < pwm < 100\n");
+                return;
+            }
+        }
+
+        uint8_t data[32];
+
+
+        controlOne.setPwm(pwms, 4);
+        int len = controlOne.getSetBytes(data, 32);
+        RS485::send(data, len);
+
+        controlTwo.setPwm(pwms, 4);
+        len = controlTwo.getSetBytes(data, 32);
+        RS485::send(data, len);
+
+        return;
+
+    }
+}
+
+
+void sendNodeData(uint8_t nodeId)
+{
+    uint8_t digitalIn = 0;
+    uint8_t latchedIn = 0;
+    uint8_t digitalOut = 0;
+    uint8_t pwmOutputs[4] = {0};
+
+    CControlOne *control;
+
+    switch (nodeId) {
+    case 1:
+        control = &controlOne;
+        break;
+    case 2:
+        control = &controlTwo;
+        break;
+    default:
+        printf("invalid node id\n");
+        return;
+        break;
+    }
+
+    control->getValues(&digitalIn, &latchedIn, &digitalOut, pwmOutputs);
+
+    char buffer[128];
+    memset(buffer, 0, 128);
+    snprintf(buffer, 128,
+            "{"
+            "\"din\":%d,"
+            "\"lin\":%d,"
+            "\"dout\":%d,"
+            "\"pwm\":[%d,%d,%d,%d]"
+            "}",
+            digitalIn,
+            latchedIn,
+            digitalOut,
+            pwmOutputs[0],
+            pwmOutputs[1],
+            pwmOutputs[2],
+            pwmOutputs[3]);
+
+    printInfo("JSON out");
+    printf("%s\n" ,  buffer);
+
+    printInfo("MQTT Publish");
+
+    if(MQTT_Interface::publish("mbed", (uint8_t *)buffer, strlen(buffer), true))
+        printf(RED("FAIL\n"));
+    else
+        printf(GREEN("OK\n"));
+}
+
+void sendNodeStatus(int argc,char *argv[])
+{
+    int nodeId = atoi(argv[1]);
+
+    if(nodeId < 0)
+        return;
+
+    sendNodeData(nodeId);
+}
+
 const Console::cmd_list_t mainCommands[] =
 {
       {"MAIN"    ,0,0,0},
       {"ws",            "",                   "Scan for WiFi Devices", scanWiFi},
 	  {"ss",            "",                   "Sample Sensors", sensorSample},
+      {"rs",            "",                   "RS485 Send", rs485Send},
+      {"rns",            "",                  "Request Node Status", requestNodeStatus},
+      {"sns",            "",                  "Send Node Status", sendNodeStatus},
       {0,0,0,0}
 };
 
@@ -104,6 +289,7 @@ Console::cmd_list_t *Console::mCmdTable[] =
 		(cmd_list_t*)configureCommands,
         0
 };
+
 
 void printWifiInfo()
 {
@@ -312,8 +498,6 @@ void parseTimeJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
     }
 
     set_time(mktime(&t));
-
-
 }
 
 void messageIn(MQTT::MessageData& md)
@@ -336,7 +520,7 @@ void messageIn(MQTT::MessageData& md)
 
 
     int r = jsmn_parse(&parser, msg, strlen(msg), tokens, 16);
-    printf("jsmn_parse: %d\n", r);
+//    printf("jsmn_parse: %d\n", r);
 
     /* Assume the top-level element is an object */
     if (r < 1 || tokens[0].type != JSMN_OBJECT)
@@ -388,6 +572,10 @@ int main()
 
 	Console::init(&pc, "wi_try");
 	wait(1);
+
+    DigitalOut rs485writeEnable(PB_12);
+    RS485::init(&rs485uart, &rs485writeEnable);
+    RS485::setReceiveCallback(rs485dataIn);
 
 	printf(CYAN_B("\nWiFi example\n\n"));
 
@@ -459,7 +647,7 @@ int main()
         inCount++;
         wait(0.5);
 
-    	if(inCount > 60)
+    	if(inCount > 20)
     	{
     	    inCount = 0;
 //    	    if(MQTT_Interface::isConnected())

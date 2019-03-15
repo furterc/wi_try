@@ -457,6 +457,8 @@
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-os/rtos/TARGET_CORTEX/rtx5/Source}&quot;"/>
 								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/cmsg}&quot;"/>
+								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/src}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-jsmn}&quot;"/>
@@ -924,6 +926,8 @@
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-os/rtos/TARGET_CORTEX/rtx5/Source}&quot;"/>
 								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/cmsg}&quot;"/>
+								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/src}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-jsmn}&quot;"/>
@@ -965,8 +969,6 @@
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1542825078.04"/>
-                                    
                                     <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_CORTEX_M"/>
@@ -978,6 +980,8 @@
                                     <listOptionValue builtIn="false" value="TARGET_M4"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_UVISOR_UNSUPPORTED"/>
+                                    
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1552155860.07"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SPI_ASYNCH=1"/>
                                     
@@ -1481,6 +1485,8 @@
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-os/rtos/TARGET_CORTEX/rtx5/Source}&quot;"/>
 								    
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/cmsg}&quot;"/>
+								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/src}&quot;"/>
 								    
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/witry/mbed-jsmn}&quot;"/>
@@ -1522,8 +1528,6 @@
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1542825078.04"/>
-                                    
                                     <listOptionValue builtIn="false" value="DEVICE_I2C_ASYNCH=1"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_CORTEX_M"/>
@@ -1535,6 +1539,8 @@
                                     <listOptionValue builtIn="false" value="TARGET_M4"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_UVISOR_UNSUPPORTED"/>
+                                    
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1552155860.07"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SPI_ASYNCH=1"/>
                                     

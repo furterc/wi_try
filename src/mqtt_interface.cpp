@@ -86,7 +86,8 @@ int MQTT_Interface::publish(const char *topic, uint8_t *buf, int len, bool debug
 
 	if(debug)
 	{
-	    printInfo("MQTT Publish: ");
+	    printInfo("MQTT Publish @ ");
+	    printf("%s : ", topic);
 	    if(rc)
 	    {
 	        printf(RED("FAIL\n"));

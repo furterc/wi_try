@@ -65,6 +65,9 @@ OBJECTS += ./caboodle.git/src/logger.o
 OBJECTS += ./caboodle.git/src/serial_irq.o
 OBJECTS += ./caboodle.git/src/stm8s_i2c_to_uart.o
 OBJECTS += ./caboodle.git/src/uitls.o
+OBJECTS += ./cmsg/cheader.o
+OBJECTS += ./cmsg/cnode.o
+OBJECTS += ./cmsg/control_one.o
 OBJECTS += ./esp8266-driver/ESP8266/ESP8266.o
 OBJECTS += ./esp8266-driver/ESP8266Interface.o
 OBJECTS += ./iicDisplay/LCDPCF8574.o
@@ -664,6 +667,7 @@ OBJECTS += ./mbed-os/targets/TARGET_STM/trng_api.o
 OBJECTS += ./mbed-os/targets/TARGET_STM/us_ticker.o
 OBJECTS += ./src/DHT22.o
 OBJECTS += ./src/LCDController.o
+OBJECTS += ./src/RS485.o
 OBJECTS += ./src/linked_list.o
 OBJECTS += ./src/main.o
 OBJECTS += ./src/mqtt_interface.o
@@ -684,6 +688,7 @@ INCLUDE_PATHS += -I.././caboodle.git
 INCLUDE_PATHS += -I.././caboodle.git/include
 INCLUDE_PATHS += -I.././caboodle.git/include/caboodle
 INCLUDE_PATHS += -I.././caboodle.git/src
+INCLUDE_PATHS += -I.././cmsg
 INCLUDE_PATHS += -I.././eclipse-extras
 INCLUDE_PATHS += -I.././esp8266-driver
 INCLUDE_PATHS += -I.././esp8266-driver/ESP8266
@@ -926,13 +931,13 @@ C_FLAGS += -D__CMSIS_RTOS
 C_FLAGS += -D__CORTEX_M4
 C_FLAGS += -DTARGET_FF_ARDUINO
 C_FLAGS += -DTOOLCHAIN_GCC
-C_FLAGS += -DMBED_BUILD_TIMESTAMP=1542825078.04
 C_FLAGS += -DDEVICE_I2C_ASYNCH=1
 C_FLAGS += -DTARGET_CORTEX_M
 C_FLAGS += -DTARGET_DEBUG
 C_FLAGS += -DTARGET_LIKE_CORTEX_M4
 C_FLAGS += -DTARGET_M4
 C_FLAGS += -DTARGET_UVISOR_UNSUPPORTED
+C_FLAGS += -DMBED_BUILD_TIMESTAMP=1552155860.07
 C_FLAGS += -DDEVICE_SPI_ASYNCH=1
 C_FLAGS += -DTARGET_STM32F411xE
 C_FLAGS += -DDEVICE_SERIAL=1
@@ -986,13 +991,13 @@ CXX_FLAGS += -D__CMSIS_RTOS
 CXX_FLAGS += -D__CORTEX_M4
 CXX_FLAGS += -DTARGET_FF_ARDUINO
 CXX_FLAGS += -DTOOLCHAIN_GCC
-CXX_FLAGS += -DMBED_BUILD_TIMESTAMP=1542825078.04
 CXX_FLAGS += -DDEVICE_I2C_ASYNCH=1
 CXX_FLAGS += -DTARGET_CORTEX_M
 CXX_FLAGS += -DTARGET_DEBUG
 CXX_FLAGS += -DTARGET_LIKE_CORTEX_M4
 CXX_FLAGS += -DTARGET_M4
 CXX_FLAGS += -DTARGET_UVISOR_UNSUPPORTED
+CXX_FLAGS += -DMBED_BUILD_TIMESTAMP=1552155860.07
 CXX_FLAGS += -DDEVICE_SPI_ASYNCH=1
 CXX_FLAGS += -DTARGET_STM32F411xE
 CXX_FLAGS += -DDEVICE_SERIAL=1
@@ -1255,6 +1260,7 @@ ASM_FLAGS += -I.././mbed-os/rtos/TARGET_CORTEX/rtx5/RTX/Source/TOOLCHAIN_GCC
 ASM_FLAGS += -I.././mbed-os/rtos/TARGET_CORTEX/rtx5/RTX/Source/TOOLCHAIN_GCC/TARGET_RTOS_M4_M7
 ASM_FLAGS += -I.././mbed-os/rtos/TARGET_CORTEX/rtx5/Include
 ASM_FLAGS += -I.././mbed-os/rtos/TARGET_CORTEX/rtx5/Source
+ASM_FLAGS += -I.././cmsg
 ASM_FLAGS += -I.././src
 ASM_FLAGS += -I.././mbed-jsmn
 

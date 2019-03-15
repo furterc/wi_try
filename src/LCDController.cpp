@@ -54,7 +54,7 @@ int LCDController::logLine(char *data)
     uint8_t len = strlen(data);
     char *entry = (char*)malloc(len+1);
     memcpy(entry, data, len);
-    printf("\n\nlog add @ %p = %s\n", entry, data);
+//    printf("\n\nlog add @ %p = %s\n", entry, data);
     entry[len] = 0;
 
     for(int i = 0; i < 3; i++)
@@ -82,9 +82,6 @@ int LCDController::logLine(char *data)
         free(entry);
         return -1;
     }
-    TRACE("LOG add success\n");
-
-
     return 0;
 }
 
@@ -101,14 +98,12 @@ void LCDController::logUpdateDisplay()
 
 void LCDController::logUpdate()
 {
-    printf("logupdate\n");
-
-    for(int i = 0; i < 3; i++)
-    {
-        printf("lcdLines[%d] %p\n", i, lcdLines[i]);
-        if(lcdLines[i] != 0)
-            printf("lcdLines[%d] = %s\n", i, lcdLines[i]);
-    }
+//    for(int i = 0; i < 3; i++)
+//    {
+//        printf("lcdLines[%d] %p\n", i, lcdLines[i]);
+//        if(lcdLines[i] != 0)
+//            printf("lcdLines[%d] = %s\n", i, lcdLines[i]);
+//    }
 
     if(lcdLines[0] == 0)
     {
@@ -117,7 +112,7 @@ void LCDController::logUpdate()
         return;
     }
 
-    printf("free lcd line @ %p \n", lcdLines[0]);
+//    printf("free lcd line @ %p \n", lcdLines[0]);
     free(lcdLines[0]);
     lcdLines[0] = 0;
 
@@ -147,7 +142,7 @@ void LCDController::logUpdate()
         return;
     }
 
-    printf("log pop @ %p = %s\n", data, data);
+//    printf("log pop @ %p = %s\n", data, data);
     lcdLines[2] = data;
     logUpdateDisplay();
 }
