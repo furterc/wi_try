@@ -13,7 +13,7 @@ NvmConfig *NvmConfig::__instance = 0;
 
 NvmConfig::NvmConfig(EEP24xx16 *eeprom) : mEeprom(eeprom)
 {
-    printf("EEPROM Block Size : 0x%04X\n", mEeprom->getBlockSize());
+
 }
 
 NvmConfig::~NvmConfig()

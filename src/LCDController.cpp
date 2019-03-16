@@ -17,7 +17,6 @@ LCDController::LCDController(LCDPCF8574 *lcd) : mLcd(lcd), mNextTick(0)
     linked_list_Init(&mLinkedList, LCD_LOG_ENTRIES);
 
     lcd->init(LCD_DISP_ON);
-    printf(GREEN("Initialized\n"));
 
     lcd->led(1);
     lcd->gotoxy(10, 0);
@@ -26,7 +25,7 @@ LCDController::LCDController(LCDPCF8574 *lcd) : mLcd(lcd), mNextTick(0)
     for(int i = 0; i < 3; i++)
         lcdLines[i] = 0;
 
-    TRACE(GREEN("initialized"));
+    TRACE(GREEN("initialized\n"));
 }
 
 void LCDController::writeLine(char *data, uint8_t line)
@@ -96,6 +95,15 @@ void LCDController::logUpdateDisplay()
     }
 }
 
+void LCDController::updateStaticValues(int temp, int humidity, bool light)
+{
+    //1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+    //t : d d . d     h :  d  d  .  d         l  :  1
+    char staticLine[20];
+    snprintf(staticLine, 20, "T:%2.1f  H:%2.1f  L:%d", ((double)temp/10), ((double)humidity/10), light);
+    writeLine(staticLine, 3);
+}
+
 void LCDController::logUpdate()
 {
 //    for(int i = 0; i < 3; i++)
@@ -107,7 +115,7 @@ void LCDController::logUpdate()
 
     if(lcdLines[0] == 0)
     {
-        mLcd->led(1);
+//        mLcd->led(1);
         mNextTick = 0;
         return;
     }
@@ -137,7 +145,7 @@ void LCDController::logUpdate()
     char *data = 0;
     if(linked_list_Pop(&mLinkedList, (void **)&data) == -1)
     {
-        printf(RED("log pop fail\n"));
+//        printf(RED("log pop fail\n"));
         logUpdateDisplay();
         return;
     }

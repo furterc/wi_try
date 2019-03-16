@@ -9,6 +9,8 @@
 #include "caboodle/utils.h"
 
 
+#define TRACE(_x, ...) INFO_TRACE("MQTT", _x, ##__VA_ARGS__)
+
 MQTT_Interface *MQTT_Interface::__instance = 0;
 
 MQTT_Interface::MQTT_Interface(MQTTNetwork* network, MQTT::Client<MQTTNetwork, Countdown> *client) : mMQTTNetwork(network), mClient(client), work(osPriorityLow, OS_STACK_SIZE, NULL, "mqttInterface")
@@ -19,7 +21,7 @@ MQTT_Interface::MQTT_Interface(MQTTNetwork* network, MQTT::Client<MQTTNetwork, C
     connectedCallback = 0;
 
     work.start(callback(run, this));
-    state = MQTT_IDLE;
+    state = MQTT_UNKNOWN;
 }
 
 MQTT_Interface::~MQTT_Interface()
@@ -37,11 +39,12 @@ void MQTT_Interface::init(MQTTNetwork* network, MQTT::Client<MQTTNetwork, Countd
 
 void MQTT_Interface::connect(char *ipAddr, uint16_t port)
 {
-	if(__instance->state != MQTT_IDLE)
+	if(__instance->state == MQTT_CONNECTED)
 	{
-		printf(YELLOW("MQTT Busy\n"));
+	    TRACE(YELLOW("Allready connected\n"));
 		return;
 	}
+
 	__instance->state = MQTT_CONNECT;
 	if(__instance->mHostname != 0)
 	    free(__instance->mHostname);
@@ -56,7 +59,10 @@ void MQTT_Interface::connect(char *ipAddr, uint16_t port)
 
 bool MQTT_Interface::isConnected()
 {
-	return __instance->mClient->isConnected();
+    if(__instance->state == MQTT_CONNECTED)
+        return true;
+
+    return false;
 }
 
 void MQTT_Interface::setConnectedCallback(void (*callback)(void))
@@ -66,10 +72,12 @@ void MQTT_Interface::setConnectedCallback(void (*callback)(void))
 
 int MQTT_Interface::publish(const char *topic, uint8_t *buf, int len, bool debug)
 {
+    if(__instance->state < MQTT_CONNECTED)
+        return -1;
+
     if(!__instance->mClient->isConnected())
     {
-        printInfo("MQTT Publish: ");
-        printf(RED("FAIL\n"));
+        TRACE(RED("Publish Fail\n"));
         __instance->state = MQTT_FAIL;
         return -1;
     }
@@ -86,8 +94,7 @@ int MQTT_Interface::publish(const char *topic, uint8_t *buf, int len, bool debug
 
 	if(debug)
 	{
-	    printInfo("MQTT Publish @ ");
-	    printf("%s : ", topic);
+	    TRACE("Publish @ %s : ", topic);
 	    if(rc)
 	    {
 	        printf(RED("FAIL\n"));
@@ -103,19 +110,21 @@ int MQTT_Interface::publish(const char *topic, uint8_t *buf, int len, bool debug
 
 int MQTT_Interface::subscribe(const char *topic, void (*messageHandler)(MQTT::MessageData &data))
 {
-      printInfo("MQTT Sub Topic");
-      printf("%s : ", topic);
+    if(__instance->state < MQTT_CONNECTED)
+        return -1;
 
-      int rc = __instance->mClient->subscribe(topic, MQTT::QOS2, messageHandler);
-      if (rc != 0)
-      {
-          printf(RED("FAIL\n"));
-          __instance->state = MQTT_FAIL;
-      }
-      else
-          printf(GREEN("OK\n"));
+    TRACE("Subscribe : %s : ", topic);
 
-      return rc;
+    int rc = __instance->mClient->subscribe(topic, MQTT::QOS2, messageHandler);
+    if (rc != 0)
+    {
+        printf(RED("FAIL\n"));
+        __instance->state = MQTT_FAIL;
+    }
+    else
+        printf(GREEN("OK\n"));
+
+    return rc;
 }
 
 void MQTT_Interface::run(MQTT_Interface *instance)
@@ -128,18 +137,21 @@ void MQTT_Interface::run(MQTT_Interface *instance)
 		{
 		case MQTT_UNKNOWN:
 		{
-			__instance->state = MQTT_IDLE;
+		}break;
+		case MQTT_FAIL:
+		{
+		    TRACE("Connect Fail\n");
+		    __instance->state = MQTT_CONNECT;
+		    wait(5);
 		}break;
 		case MQTT_CONNECT:
 		{
-			printInfo("NETWORK");
-			printf("%s:%d\n", __instance->mHostname, __instance->mPort);
+		    TRACE("Network: %s:%d\n", __instance->mHostname, __instance->mPort);
 
-		    printInfo("NETWORK");
 			int rc = __instance->mMQTTNetwork->connect(__instance->mHostname, __instance->mPort);
 		    if(!rc)
 		    {
-		        printf(GREEN("CONNECT OK\n"));
+		        TRACE(GREEN("CONNECT OK\n"));
 
 		        MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
 		        data.MQTTVersion = 3;
@@ -147,53 +159,33 @@ void MQTT_Interface::run(MQTT_Interface *instance)
 		        //      data.username.cstring = "testuser";
 		        //      data.password.cstring = "testpassword";
 
-		        printInfo("MQTT CLIENT");
-		        printf("%s\n", data.clientID.cstring);
+		        TRACE("CLIENT : %s\n", data.clientID.cstring);
 
-		        printInfo("MQTT CLIENT");
 		        rc = __instance->mClient->connect(data);
 		        if(rc)
 		        {
-		            printf(RED("CONNECT FAIL : %d\n"), (int)rc);
+		            TRACE(RED("Client Connect FAIL\n"));
 		            __instance->state = MQTT_FAIL;
 		            break;
 		        }
-		        else
-		        {
-		            printf(GREEN("CONNECT OK\n"));
-		            if(__instance->connectedCallback != 0)
-		                __instance->connectedCallback();
-		        }
 
-		        __instance->state = MQTT_IDLE;
+		        wait(1);
+		        TRACE(GREEN("Client Connect OK\n"));
+		        __instance->state = MQTT_CONNECTED;
+
+		        if(__instance->connectedCallback != 0)
+		            __instance->connectedCallback();
 		    }
 		    else
 		    {
-		        printf(RED("CONNECT FAIL : %d\n"), (int)rc);
+		        TRACE(RED("CONNECT FAIL : %d\n"), (int)rc);
 		        __instance->state = MQTT_FAIL;
 		    }
 		}break;
 		case MQTT_CONNECTED:
 		{
-
+            __instance->mClient->yield(30000);
 		}break;
-		case MQTT_FAIL:
-		{
-		    printInfo("MQTT");
-		    printf(RED("Failed to connect\n"));
-		    wait(5);
-		    __instance->state = MQTT_CONNECT;
-		}break;
-		case MQTT_IDLE:
-		{
-			__instance->mClient->yield(30000);
-//			if(!__instance->mClient->isConnected())
-//			    __instance->state = MQTT_CONNECT;
-
-		}break;
-		default:
-			break;
 		}
-//		__instance->handleByte(__instance->mSerial->getc());
 	}
 }

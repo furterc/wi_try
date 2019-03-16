@@ -34,6 +34,8 @@ public:
     void logRun();
     void logUpdateDisplay();
 
+    void updateStaticValues(int temp, int humidity, bool light);
+
     void clearLine(uint8_t line);
     void writeLine(char *data, uint8_t line);
 };

@@ -15,12 +15,12 @@
 
 #include "mbed-os/rtos/Thread.h"
 
+
 enum eMQTTInterface_state {
-	MQTT_UNKNOWN,
+    MQTT_FAIL,
+    MQTT_UNKNOWN,
 	MQTT_CONNECT,
-	MQTT_CONNECTED,
-	MQTT_FAIL,
-	MQTT_IDLE,
+	MQTT_CONNECTED
 };
 
 class MQTT_Interface {

@@ -31,31 +31,20 @@
 #include "LCDPCF8574.h"
 #include "LCDController.h"
 
-#include "RS485.h"
-#include "control_one.h"
-
 
 DigitalOut led(D9);
-
+DigitalIn lightSense(D4);
 
 ESP8266Interface wifi(D8, D2);
 TCPSocket socket;
 
 EEP24xx16 *eeprom = 0;
 
-CControlOne controlOne(1);
-CControlOne controlTwo(2);
-
-CControlOne *controlNodes[] = { &controlOne, &controlTwo, 0};
-
-CNode *myNodes[] = {&controlOne, &controlTwo, 0};
-
 /* Console */
 Serial pc(SERIAL_TX, SERIAL_RX, 115200);
 
 UARTSerial rs485uart(PA_11, PA_12, 115200);
 const char *SWdatetime  =__DATE__ " " __TIME__;
-
 
 NetworkInterface* network = 0;
 bool networkAvailable = false;
@@ -71,27 +60,6 @@ DHT22 *dht22 = 0;
 
 LCDPCF8574 *lcd = 0;
 LCDController *lcdController = 0;
-
-void rs485dataIn(uint8_t *data, int len)
-{
-    printf("rs485 in   ");
-    diag_dump_buf(data, len);
-
-    uint8_t idx = 0;
-    CControlOne *node = controlNodes[idx];
-
-    while(node)
-    {
-        int handleBytes = node->handleBytes(data, len);
-        if(handleBytes == C1_HANDLE_SET_BYTES)
-        {
-            node->updateValues(data, len);
-            CControlOne::printStatus(node);
-        }
-        node = controlNodes[++idx];
-    }
-}
-
 
 void scanWiFi(int argc,char *argv[])
 {
@@ -119,166 +87,11 @@ void sensorSample(int argc,char *argv[])
 	printf("humidity   : %d\n", humid);
 }
 
-void requestNodeStatus(int argc,char *argv[])
-{
-    if(argc != 2)
-    {
-        printf("rns <id>");
-        return;
-    }
-
-    int nodeId = atoi(argv[1]);
-    uint8_t data[16];
-    uint32_t dataLen = 0;
-
-    switch (nodeId) {
-        case 1:
-            dataLen  = controlOne.getHeaderBytes(0, data, 16);
-            break;
-        case 2:
-            dataLen  = controlTwo.getHeaderBytes(0, data, 16);
-            break;
-        default:
-            printf("invalid node id\n");
-            return;
-            break;
-    }
-
-//    printf("data out : ");
-//    diag_dump_buf(data, dataLen);
-    RS485::send(data, dataLen);
-    return;
-}
-
-void rs485Send(int argc,char *argv[])
-{
-    if(argc == 2)
-    {
-        int digitalOut = atoi(argv[1]);
-        if(digitalOut < 0 || digitalOut > 15)
-        {
-            printf("0 < digitalOut < 15\n");
-            return;
-        }
-
-        uint8_t data[32];
-        controlOne.updateDigitalOut(digitalOut);
-        int len = controlOne.getSetBytes(data, 32);
-        RS485::send(data, len);
-
-        controlTwo.updateDigitalOut(digitalOut);
-        len = controlTwo.getSetBytes(data, 32);
-        RS485::send(data, len);
-
-        return;
-    }
-
-    if(argc == 5)
-    {
-        printf("set pwms\n");
-        uint8_t pwm0 = (uint8_t)atoi(argv[1]);
-        uint8_t pwm1 = (uint8_t)atoi(argv[2]);
-        uint8_t pwm2 = (uint8_t)atoi(argv[3]);
-        uint8_t pwm3 = (uint8_t)atoi(argv[4]);
-
-        uint8_t pwms[4] = {pwm0, pwm1, pwm2, pwm3};
-
-        for(int i = 0; i < 4; i++)
-        {
-            if(pwms[i] > 100)
-            {
-                printf("0 < pwm < 100\n");
-                return;
-            }
-        }
-
-        uint8_t data[32];
-
-
-        controlOne.setPwm(pwms, 4);
-        int len = controlOne.getSetBytes(data, 32);
-        RS485::send(data, len);
-
-        controlTwo.setPwm(pwms, 4);
-        len = controlTwo.getSetBytes(data, 32);
-        RS485::send(data, len);
-
-        return;
-
-    }
-}
-
-
-void sendNodeData(uint8_t nodeId)
-{
-    uint8_t digitalIn = 0;
-    uint8_t latchedIn = 0;
-    uint8_t digitalOut = 0;
-    uint8_t pwmOutputs[4] = {0};
-
-    CControlOne *control;
-
-    switch (nodeId) {
-    case 1:
-        control = &controlOne;
-        break;
-    case 2:
-        control = &controlTwo;
-        break;
-    default:
-        printf("invalid node id\n");
-        return;
-        break;
-    }
-
-    control->getValues(&digitalIn, &latchedIn, &digitalOut, pwmOutputs);
-
-    char buffer[128];
-    memset(buffer, 0, 128);
-    snprintf(buffer, 128,
-            "{"
-            "\"din\":%d,"
-            "\"lin\":%d,"
-            "\"dout\":%d,"
-            "\"pwm\":[%d,%d,%d,%d]"
-            "}",
-            digitalIn,
-            latchedIn,
-            digitalOut,
-            pwmOutputs[0],
-            pwmOutputs[1],
-            pwmOutputs[2],
-            pwmOutputs[3]);
-
-    printInfo("JSON out");
-    printf("%s\n" ,  buffer);
-
-    printInfo("MQTT Publish");
-
-    if(MQTT_Interface::publish("mbed", (uint8_t *)buffer, strlen(buffer), true))
-        printf(RED("FAIL\n"));
-    else
-        printf(GREEN("OK\n"));
-}
-
-void sendNodeStatus(int argc,char *argv[])
-{
-    int nodeId = atoi(argv[1]);
-
-    if(nodeId < 0)
-        return;
-
-    sendNodeData(nodeId);
-}
-
 const Console::cmd_list_t mainCommands[] =
 {
       {"MAIN"    ,0,0,0},
       {"ws",            "",                   "Scan for WiFi Devices", scanWiFi},
 	  {"ss",            "",                   "Sample Sensors", sensorSample},
-      {"rs",            "",                   "RS485 Send", rs485Send},
-      {"rns",            "",                  "Request Node Status", requestNodeStatus},
-      {"sns",            "",                  "Send Node Status", sendNodeStatus},
       {0,0,0,0}
 };
 
@@ -293,16 +106,11 @@ Console::cmd_list_t *Console::mCmdTable[] =
 
 void printWifiInfo()
 {
-    printInfo("MAC");
-    printf("%s\n", wifi.get_mac_address());
-    printInfo("IP");
-    printf("%s\n", wifi.get_ip_address());
-    printInfo("Netmask");
-    printf("%s\n", wifi.get_netmask());
-    printInfo("Gateway");
-    printf("%s\n", wifi.get_gateway());
-    printInfo("RSSI");
-    printf("%d\n", wifi.get_rssi());
+    INFO_TRACE("MAC", "%s\n", wifi.get_mac_address());
+    INFO_TRACE("IP", "%s\n", wifi.get_ip_address());
+    INFO_TRACE("Netmask", "%s\n", wifi.get_netmask());
+    INFO_TRACE("Gateway", "%s\n", wifi.get_gateway());
+    INFO_TRACE("RSSI", "%d\n", wifi.get_rssi());
 }
 
 static int jsoneq(const char *json, jsmntok_t *tok, const char *s)
@@ -424,80 +232,23 @@ void parseTempThreshJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
     NvmConfig::setThresholds(&thresholds);
 }
 
-void parseTimeJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
+void parseEpochTimeJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
 {
-    struct tm t;
-
-    char value[16];
-    memset(value, 0, 16);
-
-    /* Loop over all keys of the root object */
-    for (int i = 1; i < tokenCount; i++)
+    if (jsoneq(msg, &tokens[1], "timestamp") == 0)
     {
-        if (jsoneq(msg, &tokens[i], "year") == 0)
-        {
-            int len = tokens[i+1].end-tokens[i+1].start;
-            memcpy(value, msg + tokens[i+1].start, len);
-            value[len] = 0;
+        char value[32] = {0};
+        int len = tokens[2].end-tokens[2].start;
+        memcpy(value, msg + tokens[2].start, len);
+        value[len] = 0;
 
-            t.tm_year = atoi(value) - 1900;
-            printf("year  %s\n", value);
+        char *pEnd;
+        time_t timestamp = strtoull(value, &pEnd, 10);
+        timestamp += 7200;  // add 2 hours for CAT
 
-            i++;
-        } else if (jsoneq(msg, &tokens[i], "month") == 0)
-        {
-            int len = tokens[i+1].end-tokens[i+1].start;
-            memcpy(value, msg + tokens[i+1].start, len);
-            value[len] = 0;
-
-            t.tm_mon = atoi(value) - 1;
-            printf("month %s\n", value);
-
-            i++;
-        } else if (jsoneq(msg, &tokens[i], "day") == 0)
-        {
-            int len = tokens[i+1].end-tokens[i+1].start;
-            memcpy(value, msg + tokens[i+1].start, len);
-            value[len] = 0;
-
-            t.tm_mday = atoi(value);
-            printf("day %s\n", value);
-
-            i++;
-        } else if (jsoneq(msg, &tokens[i], "hour") == 0)
-        {
-            int len = tokens[i+1].end-tokens[i+1].start;
-            memcpy(value, msg + tokens[i+1].start, len);
-            value[len] = 0;
-
-            t.tm_hour = atoi(value);
-            printf("hour %s\n", value);
-
-            i++;
-        } else if (jsoneq(msg, &tokens[i], "minute") == 0)
-        {
-            int len = tokens[i+1].end-tokens[i+1].start;
-            memcpy(value, msg + tokens[i+1].start, len);
-            value[len] = 0;
-
-            t.tm_min = atoi(value);
-            printf("minute %s\n", value);
-
-            i++;
-        } else if (jsoneq(msg, &tokens[i], "second") == 0)
-        {
-            int len = tokens[i+1].end-tokens[i+1].start;
-            memcpy(value, msg + tokens[i+1].start, len);
-            value[len] = 0;
-
-            t.tm_sec = atoi(value);
-            printf("minute %s\n", value);
-
-            i++;
-        }
+        struct tm epoch_time;
+        memcpy(&epoch_time, localtime(&timestamp), sizeof (struct tm));
+        set_time(mktime(&epoch_time));
     }
-
-    set_time(mktime(&t));
 }
 
 void messageIn(MQTT::MessageData& md)
@@ -532,8 +283,8 @@ void messageIn(MQTT::MessageData& md)
     /* Loop over all keys of the root object */
 //    for (int i = 1; i < r; i++)
 //    {
-    if (jsoneq(msg, &tokens[1], "year") == 0)
-        parseTimeJsonObj(tokens, r, msg);
+    if (jsoneq(msg, &tokens[1], "timestamp") == 0)
+            parseEpochTimeJsonObj(tokens, r, msg);
 
     if (jsoneq(msg, &tokens[1], "tempLow") == 0)
         parseTempThreshJsonObj(tokens, r, msg);
@@ -546,42 +297,65 @@ void messageIn(MQTT::MessageData& md)
 
 }
 
-static void ligthAlarm(uint8_t state)
-{
-    printf("ledState: %d\n", state);
-    led = state;
-}
-
 static void mqttConnected(void)
 {
-    const char *topic = "mbed";
+    const char *topic = "down";
     MQTT_Interface::subscribe(topic, messageIn);
+
+    INFO_TRACE("NETWORK", "Request Time\n");
+
+    char buffer[64];
+    memset(buffer, 0, 64);
+    snprintf(buffer, 64,
+            "{"
+            "\"request\":\"timestamp\"}");
+
+    MQTT_Interface::publish("up", (uint8_t*)buffer, strlen(buffer));
+}
+
+void sendTrendFrame(int temperature, int humidity, int light)
+{
+    char buffer[64];
+    memset(buffer, 0, 64);
+    snprintf(buffer, 64,
+            "{\"trend\":{"
+            "\"temp\":%d,"
+            "\"humid\":%d,"
+            "\"light\":%d"
+            "}}", temperature, humidity, light);
+
+    MQTT_Interface::publish("up", (uint8_t*)buffer, strlen(buffer));
+}
+
+int sampleLight()
+{
+    for(int i=0; i < 16; i++)
+    {
+        if(!lightSense.read())
+            return 1;
+
+        wait(0.005);
+    }
+
+    return 0;
 }
 
 int main()
 {
-	printf("\n\nWiTry Demo\n");
+    printf(CYAN_B("\nWiFi monitor\n\n"));
 
-	printInfo("Version");
-	printf("0x%08X\n", MBED_CONF_APP_VERSION);
-
-	printInfo("Build");
-	printf("%s\n\n", SWdatetime);
+    INFO_TRACE("Version", "0x%08X\n", MBED_CONF_APP_VERSION);
+    INFO_TRACE("Build", "%s\n", SWdatetime);
 
 	dht22 = new DHT22(A0);
 
 	Console::init(&pc, "wi_try");
 	wait(1);
 
-    DigitalOut rs485writeEnable(PB_12);
-    RS485::init(&rs485uart, &rs485writeEnable);
-    RS485::setReceiveCallback(rs485dataIn);
-
-	printf(CYAN_B("\nWiFi example\n\n"));
-
 	I2C i2cEEP(D14, D15);
 	printInfo("EEPROM");
 	eeprom = new EEP24xx16(i2cEEP);
+
 	if(!eeprom->getMemorySize())
 	    printf(RED("FAIL\n"));
 	else
@@ -591,34 +365,47 @@ int main()
 	}
 
     I2C i2cLCD(D3, D6);
-    printInfo("PCF8547");
-
     lcd = new LCDPCF8574(&i2cLCD, 0);
     lcdController = new LCDController(lcd);
 
-    lcdController->logLine((char *)"LCD Init");
+    {
+        char version[20];
+        snprintf(version, 20, "ver:0x%08X", MBED_CONF_APP_VERSION);
+        lcdController->logLine(version);
+        snprintf(version, 20, "%s", SWdatetime);
+        lcdController->logLine(version);
+    }
 
 	static sNetworkCredentials_t wifiCredentials;
 	NvmConfig::getWifiCredentials(&wifiCredentials);
 
-	printInfo("WIFI");
-	printf(GREEN("Connecting...\n"));
+	INFO_TRACE("WIFI", "Connecting..\n");
 	int ret = wifi.connect(wifiCredentials.wifi_ssid, wifiCredentials.wifi_pw, NSAPI_SECURITY_WPA_WPA2);
-
-	printInfo("WIFI Connection");
 	if (ret != 0) {
-	    printf(RED("FAIL\n"));
+
+	    INFO_TRACE("WIFI", RED("Connect Fail\n"));
+
 	    lcdController->logLine((char *)"WiFi Connect Fail");
+	    lcdController->logLine((char *)"Check Credentials");
+
+        INFO_TRACE("WIFI", YELLOW_B("Check Credentials\n"));
+	    while(1)
+	    {
+	        wait(1);
+	        lcdController->logRun();
+	    }
 	    return -1;
 	}
-	printf(GREEN("OK\n"));
+
+	INFO_TRACE("WIFI", GREEN("Connect OK\n"));
 	lcdController->logLine((char *)"WiFi Connect OK");
 
-	printWifiInfo();
-
-	char ip[20];
-	snprintf(ip, 20, "IP: %s", wifi.get_ip_address());
-	lcdController->logLine(ip);
+	{
+	    printWifiInfo();
+	    char ip[20];
+	    snprintf(ip, 20, "IP: %s", wifi.get_ip_address());
+	    lcdController->logLine(ip);
+	}
 
 	MQTTNetwork mqttNetwork(&wifi);
 	MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
@@ -629,19 +416,22 @@ int main()
 
     const char *topic = "mbed";
 
-    static sAlarmTimes_t alarms;
-    NvmConfig::getAlarms(&alarms);
 
-    RTC_Alarm testAlarm;
 
-    testAlarm.setAlarm(&alarms.lightOn, &alarms.lightOff);
-    testAlarm.setTiggerCallback(ligthAlarm);
+//
+//    static sAlarmTimes_t alarms;
+//    NvmConfig::getAlarms(&alarms);
+//
+//    RTC_Alarm testAlarm;
+//
+//    testAlarm.setAlarm(&alarms.lightOn, &alarms.lightOff);
+//    testAlarm.setTiggerCallback(ligthAlarm);
 
     while (1)
 	{
         lcdController->logRun();
 
-        testAlarm.checkAlarm();
+//        testAlarm.checkAlarm();
         static int inCount = 1200;
 
         inCount++;
@@ -665,18 +455,17 @@ int main()
     	        memset(line, 0, 20);
     	        snprintf(line, 20, "temp: %d humid %d", temp ,humid);
     	        lcdController->logLine(line);
+
+    	        int light = sampleLight();
+
+    	        lcdController->updateStaticValues(temp, humid, light);
+
+    	        sendTrendFrame(temp, humid, light);
+
 //    	        lcd->gotoxy(0, 4);
 //    	        lcd->puts(line);
 
-    	        char buffer[64];
-    	        memset(buffer, 0, 64);
-    	        snprintf(buffer, 64,
-    	                "{"
-    	                "\"temp\":%d,"
-    	                "\"humid\":%d"
-    	                "}", temp, humid);
 
-    	        MQTT_Interface::publish(topic, (uint8_t*)buffer, strlen(buffer));
     	    }
     	}
 	}
