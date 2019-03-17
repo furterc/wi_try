@@ -30,7 +30,14 @@
 
 #include "LCDPCF8574.h"
 #include "LCDController.h"
+#include "Relay.h"
 
+Relay rl1(A1);
+Relay rl2(A2);
+Relay rl3(A3);
+Relay rl4(A4);
+
+Relay *relays[4] = {&rl1, &rl2, &rl3, &rl4};
 
 DigitalOut led(D9);
 DigitalIn lightSense(D4);
@@ -66,6 +73,42 @@ void scanWiFi(int argc,char *argv[])
 
 }
 
+void relayDebug(int argc,char *argv[])
+{
+    if(argc == 1)
+    {
+        for(uint8_t r = 0; r < 4; r++)
+            printf("relay %d = %s\n", r, (relays[r]->get() ? "ON" : "OFF"));
+
+        return;
+    }
+
+    if(argc == 3)
+    {
+        int relayNr = atoi(argv[1]);
+        int state = atoi(argv[2]);
+        if((relayNr < 0) || (relayNr > 3))
+        {
+            printf(YELLOW("0 < relayNr < 4\n"));
+            return;
+        }
+
+        if((state < 0) || (state > 1))
+        {
+            printf(YELLOW("0 < state < 2\n"));
+            return;
+        }
+
+        relays[relayNr]->latch(state);
+        printf(GREEN("Set relay : %d : %d\n"), relayNr, state);
+
+        return;
+    }
+
+    printf("rl - show state\n");
+    printf("rl <num> <state> - set relay\n");
+}
+
 HAL_StatusTypeDef sample_dht22(uint16_t &temp, uint16_t &humid)
 {
 	if(dht22->sample())
@@ -92,6 +135,7 @@ const Console::cmd_list_t mainCommands[] =
       {"MAIN"    ,0,0,0},
       {"ws",            "",                   "Scan for WiFi Devices", scanWiFi},
 	  {"ss",            "",                   "Sample Sensors", sensorSample},
+	  {"rl",            "",                   "Relay Debug", relayDebug},
       {0,0,0,0}
 };
 
@@ -414,24 +458,10 @@ int main()
     MQTT_Interface::connect(wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
     MQTT_Interface::setConnectedCallback(mqttConnected);
 
-    const char *topic = "mbed";
-
-
-
-//
-//    static sAlarmTimes_t alarms;
-//    NvmConfig::getAlarms(&alarms);
-//
-//    RTC_Alarm testAlarm;
-//
-//    testAlarm.setAlarm(&alarms.lightOn, &alarms.lightOff);
-//    testAlarm.setTiggerCallback(ligthAlarm);
-
     while (1)
 	{
         lcdController->logRun();
 
-//        testAlarm.checkAlarm();
         static int inCount = 1200;
 
         inCount++;
