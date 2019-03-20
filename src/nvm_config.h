@@ -26,17 +26,14 @@ typedef struct {
 } sNetworkCredentials_t;
 
 typedef struct {
-    int tempLow;
-    int tempHigh;
-    int humidLow;
-    int humidHigh;
-} sThresholds_t;
-
-typedef struct {
-    sRTCAlarmObj_t lightOn;
-    sRTCAlarmObj_t lightOff;
-} sAlarmTimes_t;
-
+    uint8_t inlineOverride;
+    int inlineLowOff;
+    int inlineLowOn;
+    int inlineHighOff;
+    int inlineHighOn;
+    int tempAlarm;
+    int humidAlarm;
+} sTempThresholds_t;
 
 class NvmConfig
 {
@@ -54,11 +51,8 @@ public:
     static int setWifiCredentials(sNetworkCredentials_t *credentials);
     static int getWifiCredentials(sNetworkCredentials_t *credentials);
 
-    static int setThresholds(sThresholds_t *thresholds);
-    static int getThresholds(sThresholds_t *thresholds);
-
-    static int setAlarms(sAlarmTimes_t *alarms);
-    static int getAlarms(sAlarmTimes_t *alarms);
+    static int setThresholds(sTempThresholds_t *thresholds);
+    static int getThresholds(sTempThresholds_t *thresholds);
 
     static void wifiSSIDConfig(int argc,char *argv[]);
     static void wifiPasswordConfig(int argc,char *argv[]);
@@ -66,8 +60,9 @@ public:
     static void mqttIPConfig(int argc,char *argv[]);
     static void mqttPortConfig(int argc,char *argv[]);
 
-    static void tempThresholdConfig(int argc,char *argv[]);
-    static void humidThresholdConfig(int argc,char *argv[]);
+    static void inlineThresholdConfig(int argc,char *argv[]);
+    static void inlineOverrideConfig(int argc,char *argv[]);
+    static void alarmThresholdConfig(int argc,char *argv[]);
 
     static void lightAlarmConfig(int argc,char *argv[]);
 };

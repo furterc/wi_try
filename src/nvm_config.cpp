@@ -54,53 +54,27 @@ int NvmConfig::getWifiCredentials(sNetworkCredentials_t *credentials)
 }
 
 
-int NvmConfig::setThresholds(sThresholds_t *thresholds)
+int NvmConfig::setThresholds(sTempThresholds_t *thresholds)
 {
     if(!__instance)
         return -1;
 
-    int len = __instance->mEeprom->write(NVM_OFFSET_THRESHOLDS, thresholds, sizeof(sThresholds_t));
+    int len = __instance->mEeprom->write(NVM_OFFSET_THRESHOLDS, thresholds, sizeof(sTempThresholds_t));
 
-    if(len == sizeof(sThresholds_t))
+    if(len == sizeof(sTempThresholds_t))
         return 0;
 
     return 1;
 }
 
-int NvmConfig::getThresholds(sThresholds_t *thresholds)
+int NvmConfig::getThresholds(sTempThresholds_t *thresholds)
 {
     if(!__instance)
         return -1;
 
-    int len = __instance->mEeprom->read(NVM_OFFSET_THRESHOLDS, thresholds, sizeof(sThresholds_t));
+    int len = __instance->mEeprom->read(NVM_OFFSET_THRESHOLDS, thresholds, sizeof(sTempThresholds_t));
 
-    if(len == sizeof(sThresholds_t))
-        return 0;
-
-    return 1;
-}
-
-int NvmConfig::setAlarms(sAlarmTimes_t *alarms)
-{
-    if(!__instance)
-        return -1;
-
-    int len = __instance->mEeprom->write(NVM_OFFSET_ALARMS, alarms, sizeof(sAlarmTimes_t));
-
-    if(len == sizeof(sAlarmTimes_t))
-        return 0;
-
-    return 1;
-}
-
-int NvmConfig::getAlarms(sAlarmTimes_t *alarms)
-{
-    if(!__instance)
-        return -1;
-
-    int len = __instance->mEeprom->read(NVM_OFFSET_ALARMS, alarms, sizeof(sAlarmTimes_t));
-
-    if(len == sizeof(sAlarmTimes_t))
+    if(len == sizeof(sTempThresholds_t))
         return 0;
 
     return 1;
@@ -301,9 +275,9 @@ void NvmConfig::mqttPortConfig(int argc,char *argv[])
     NvmConfig::setWifiCredentials(&cred);
 }
 
-void NvmConfig::tempThresholdConfig(int argc,char *argv[])
+void NvmConfig::inlineThresholdConfig(int argc,char *argv[])
 {
-    sThresholds_t thresholds;
+    sTempThresholds_t thresholds;
     if(NvmConfig::getThresholds(&thresholds) == -1)
     {
         printf(RED("EEPROM Not found\n"));
@@ -312,125 +286,138 @@ void NvmConfig::tempThresholdConfig(int argc,char *argv[])
 
     if(argc == 1)
     {
-        printf("Temperature Thresholds\n - low  %d\n - high %d\n", thresholds.tempLow, thresholds.tempHigh);
-        return;
-    }
+        printf(CYAN_B("Temperature Thresholds\n"));
 
-    if(argc != 3)
-    {
-        printf(YELLOW("tht <low> <high>\n"));
-        return;
-    }
+        printf(CYAN("Inline Fan\n"));
+        printf("override: %d\n", thresholds.inlineOverride);
+        printf("LOW off : %d\n", thresholds.inlineLowOff);
+        printf("LOW on  : %d\n", thresholds.inlineLowOn);
+        printf("HIGH off: %d\n", thresholds.inlineHighOff);
+        printf("HIGH on : %d\n", thresholds.inlineHighOn);
 
-    int low = atoi(argv[1]);
-    int high = atoi(argv[2]);
-
-    if(low > high)
-    {
-        printf(RED("Low > High\n"));
-        return;
-    }
-
-    if(low < 0 || low > 150 || high < 0 || high > 150)
-    {
-        printf(RED("0 < temperature < 150\n"));
-        return;
-    }
-
-    thresholds.tempLow = low;
-    thresholds.tempHigh = high;
-
-    NvmConfig::setThresholds(&thresholds);
-}
-
-void NvmConfig::humidThresholdConfig(int argc,char *argv[])
-{
-    sThresholds_t thresholds;
-    if(NvmConfig::getThresholds(&thresholds) == -1)
-    {
-        printf(RED("EEPROM Not found\n"));
-        return;
-    }
-
-    if(argc == 1)
-    {
-        printf("Humidity Thresholds\n - low  %d\n - high %d\n", thresholds.humidLow, thresholds.humidHigh);
-        return;
-    }
-
-    if(argc != 3)
-    {
-        printf(YELLOW("thh <low> <high>\n"));
-        return;
-    }
-
-    int low = atoi(argv[1]);
-    int high = atoi(argv[2]);
-
-    if(low > high)
-    {
-        printf(RED("Low > High\n"));
-        return;
-    }
-
-    if(low < 0 || low > 100 || high < 0 || high > 100)
-    {
-        printf(RED("0 < humidity < 100\n"));
-        return;
-    }
-
-    thresholds.humidLow = low;
-    thresholds.humidHigh = high;
-
-    NvmConfig::setThresholds(&thresholds);
-}
-
-void NvmConfig::lightAlarmConfig(int argc,char *argv[])
-{
-    sAlarmTimes_t alarms;
-    if(NvmConfig::getAlarms(&alarms) == -1)
-    {
-        printf(RED("EEPROM Not found\n"));
-        return;
-    }
-
-    if(argc == 1)
-    {
-        printf("Light Alarm \n - on  %02d:%02d\n - off %02d:%02d\n",
-                alarms.lightOn.hour, alarms.lightOn.minute,
-                alarms.lightOff.hour, alarms.lightOff.minute);
         return;
     }
 
     if(argc != 5)
     {
-        printf(YELLOW("la <onHour> <onMinute> <offHour> <offMinute>\n"));
+        printf(YELLOW("thi <low_on> <low_off> <high_on> <high_off>\n"));
         return;
     }
 
-    int onHour    = atoi(argv[1]);
-    int onMinute  = atoi(argv[2]);
-    int offHour   = atoi(argv[3]);
-    int offMinute = atoi(argv[4]);
+    int lowOff  = atoi(argv[1]);
+    int lowOn   = atoi(argv[2]);
+    int highOff = atoi(argv[3]);
+    int highOn  = atoi(argv[4]);
 
-    if(onHour < 0 || onHour > 23 || offHour < 0 || offHour > 23)
+    if(lowOff > lowOn || lowOn > highOff || highOff > highOn)
     {
-        printf(RED("0 < Hour < 23\n"));
+        printf(YELLOW("lowOff < lowOn < highOff < highOn\n"));
         return;
     }
 
-    if(onMinute < 0 || onMinute > 59 || offMinute < 0 || offMinute > 59)
+    if(lowOff < 0 || highOn > 150)
     {
-        printf(RED("0 < Minute < 59\n"));
+        printf(RED("0 < temperature < 150\n"));
         return;
     }
 
-    alarms.lightOn.hour    = onHour;
-    alarms.lightOn.minute  = onMinute;
-    alarms.lightOff.hour   = offHour;
-    alarms.lightOff.minute = offMinute;
+    thresholds.inlineLowOff  = lowOff;
+    thresholds.inlineLowOn   = lowOn;
+    thresholds.inlineHighOff = highOff;
+    thresholds.inlineHighOn  = highOn;
 
-    NvmConfig::setAlarms(&alarms);
+    printf(GREEN("Set Inline Fan\n"));
+    printf("override: %d\n", thresholds.inlineOverride);
+    printf("LOW off : %d\n", thresholds.inlineLowOff);
+    printf("LOW on  : %d\n", thresholds.inlineLowOn);
+    printf("HIGH off: %d\n", thresholds.inlineHighOff);
+    printf("HIGH on : %d\n", thresholds.inlineHighOn);
+
+
+    NvmConfig::setThresholds(&thresholds);
+}
+
+void NvmConfig::inlineOverrideConfig(int argc,char *argv[])
+{
+    sTempThresholds_t thresholds;
+    if(NvmConfig::getThresholds(&thresholds) == -1)
+    {
+        printf(RED("EEPROM Not found\n"));
+        return;
+    }
+
+    if(argc == 1)
+    {
+        printf(CYAN("Inline Fan\n"));
+        printf("Override : %d\n", thresholds.inlineOverride);
+
+        return;
+    }
+
+    if(argc != 2)
+    {
+        printf(YELLOW("thio 0/1\n"));
+        return;
+    }
+
+    int inlineOverride = atoi(argv[1]);
+
+    if(inlineOverride < 0 || inlineOverride > 1)
+    {
+        printf(YELLOW("0 < override < 2\n"));
+        return;
+    }
+
+    thresholds.inlineOverride = inlineOverride;
+
+    printf(CYAN("Set Inline Fan\n"));
+    printf("Override : %d\n", thresholds.inlineOverride);
+
+    NvmConfig::setThresholds(&thresholds);
+}
+
+void NvmConfig::alarmThresholdConfig(int argc,char *argv[])
+{
+    sTempThresholds_t thresholds;
+    if(NvmConfig::getThresholds(&thresholds) == -1)
+    {
+        printf(RED("EEPROM Not found\n"));
+        return;
+    }
+
+    if(argc == 1)
+    {
+        printf(CYAN("Alarm Thresholds\n"));
+        printf("Temperature  : %d\n", thresholds.tempAlarm);
+        printf("Humidity     : %d\n", thresholds.humidAlarm);
+
+        return;
+    }
+
+    if(argc != 3)
+    {
+        printf(YELLOW("tha <temperature> <humidity>\n"));
+        return;
+    }
+
+    int alarmTemperature = atoi(argv[1]);
+    int alarmHumidity = atoi(argv[2]);
+
+    if(alarmTemperature < 0 || alarmTemperature > 149 || alarmHumidity < 0 || alarmHumidity > 100)
+    {
+        printf(YELLOW("0 < temperature < 150\n"));
+        printf(YELLOW("0 < humidity    < 101\n"));
+        return;
+    }
+
+    thresholds.tempAlarm = alarmTemperature;
+    thresholds.humidAlarm = alarmHumidity;
+
+    printf(GREEN("Set Alarm Thresholds\n"));
+    printf("Temperature  : %d\n", thresholds.tempAlarm);
+    printf("Humidity     : %d\n", thresholds.humidAlarm);
+
+    NvmConfig::setThresholds(&thresholds);
 }
 
 const Console::cmd_list_t configureCommands[] =
@@ -440,8 +427,8 @@ const Console::cmd_list_t configureCommands[] =
         {"wpw",       "",  "Set the WiFi Password",         NvmConfig::wifiPasswordConfig},
         {"mip",       "",  "Set the MQTT IP",               NvmConfig::mqttIPConfig},
         {"mp",        "",  "Set the MQTT Port",             NvmConfig::mqttPortConfig},
-        {"tht",       "",  "Set temperature thresholds",    NvmConfig::tempThresholdConfig},
-        {"thh",       "",  "Set humidity thresholds",       NvmConfig::humidThresholdConfig},
-        {"la",        "",  "Set Light Alarm",               NvmConfig::lightAlarmConfig},
+        {"thi",       "",  "Set inline fan thresholds",     NvmConfig::inlineThresholdConfig},
+        {"thio",       "",  "Set inline fan override",       NvmConfig::inlineOverrideConfig},
+        {"tha",       "",  "Set alarm thresholds",          NvmConfig::alarmThresholdConfig},
         {0,0,0,0}
 };

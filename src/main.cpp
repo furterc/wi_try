@@ -1,76 +1,119 @@
-#include <stdio.h>
-#include <console.h>
-#include <Serial.h>
-#include <string.h>
-
-#include "utils.h"
-
 #include "mbed.h"
 
-#include "linked_list.h"
-
-#define logMessage printf
-
-#define MQTTCLIENT_QOS2 1
-
-#include "DHT22.h"
-#include "MQTTNetwork.h"
-#include "MQTTmbed.h"
-#include "MQTTClient.h"
-
-#include "ESP8266Interface.h"
-#include "EEP24xx16.h"
+#include "utils.h"
+#include <console.h>
 
 #include "nvm_config.h"
 
-#include "jsmn.h"
-#include "rtc_alarm.h"
-
+#include "ESP8266Interface.h"
+#include "EEP24xx16.h"
 #include "mqtt_interface.h"
+#include "jsmn.h"
 
 #include "LCDPCF8574.h"
 #include "LCDController.h"
+
+#include "DHT22.h"
 #include "Relay.h"
+#include "InlineFan.h"
 
-Relay rl1(A1);
-Relay rl2(A2);
-Relay rl3(A3);
-Relay rl4(A4);
+/* Build Date */
+const char *SWdatetime  =__DATE__ " " __TIME__;
 
-Relay *relays[4] = {&rl1, &rl2, &rl3, &rl4};
-
-DigitalOut led(D9);
-DigitalIn lightSense(D4);
-
-ESP8266Interface wifi(D8, D2);
-TCPSocket socket;
-
-EEP24xx16 *eeprom = 0;
+/* Tick */
+Timer tickTimer;
 
 /* Console */
 Serial pc(SERIAL_TX, SERIAL_RX, 115200);
 
-UARTSerial rs485uart(PA_11, PA_12, 115200);
-const char *SWdatetime  =__DATE__ " " __TIME__;
+/* EEPROM */
+EEP24xx16 *eeprom = 0;
+
+/* WiFi */
+ESP8266Interface wifi(D8, D2);
+TCPSocket socket;
 
 NetworkInterface* network = 0;
 bool networkAvailable = false;
 int arrivedcount = 0;
 
-//MQTTNetwork *mqttNetwork = 0;
+enum eWifiStates{
+    WIFI_STATUS_CONNECTING,
+    WIFI_STATUS_CONNECTED,
+    WIFI_STATUS_DISCONNECTED,
+    WIFI_STATUS_WAIT
+};
+eWifiStates wifiState = WIFI_STATUS_CONNECTING;
 
-MQTT::Client<MQTTNetwork, Countdown> *mClient = 0;
-float version = 0.6;
-const char* topic = "mbed";
-
-DHT22 *dht22 = 0;
-
+/* LCD */
 LCDPCF8574 *lcd = 0;
 LCDController *lcdController = 0;
 
-void scanWiFi(int argc,char *argv[])
-{
+/* LED */
+DigitalOut led(D9);
 
+/* Temp & Humid */
+DHT22 *dht22 = 0;
+
+/* Light Sensor */
+DigitalIn lightSense(D4);
+
+/* Relays */
+Relay inlinePower(A1, RELAY_NC);
+Relay inlineHighSpeed(A2, RELAY_NO);
+Relay rl3(A3, RELAY_NO);
+Relay rl4(A4, RELAY_NO);
+
+Relay *relays[4] = {&inlinePower, &inlineHighSpeed, &rl3, &rl4};
+
+InlineFan fan(&inlinePower, &inlineHighSpeed);
+
+/* TREND Defines */
+#define TREND_DUTY_MS   30000 //ms
+int trendTick = 0;
+
+/* ----------------------- FUNCTIONS ----------------------- */
+void inlineFan(int argc,char *argv[])
+{
+    if(argc == 1)
+    {
+        INFO_TRACE("INLINE", "");
+        switch(fan.getSpeed())
+        {
+        case INLINE_OFF:
+            printf("OFF\n");
+            break;
+        case INLINE_LOW_SPEED:
+            printf("LOW SPEED\n");
+            break;
+        case INLINE_HIGH_SPEED:
+            printf("HIGH SPEED\n");
+            break;
+        }
+        return;
+    }
+
+    if(argc == 2)
+    {
+        if(!strcmp("off", argv[1]))
+        {
+            fan.setSpeed(INLINE_OFF);
+            return;
+        }
+        if(!strcmp("low", argv[1]))
+        {
+            fan.setSpeed(INLINE_LOW_SPEED);
+            return;
+        }
+        if(!strcmp("high", argv[1]))
+        {
+            fan.setSpeed(INLINE_HIGH_SPEED);
+            return;
+        }
+    }
+
+    printf("Invalid fan speed\n");
+    printf("Try: off/low/high\n");
 }
 
 void relayDebug(int argc,char *argv[])
@@ -133,9 +176,9 @@ void sensorSample(int argc,char *argv[])
 const Console::cmd_list_t mainCommands[] =
 {
       {"MAIN"    ,0,0,0},
-      {"ws",            "",                   "Scan for WiFi Devices", scanWiFi},
 	  {"ss",            "",                   "Sample Sensors", sensorSample},
 	  {"rl",            "",                   "Relay Debug", relayDebug},
+	  {"il",            "",                   "Inline Fan", inlineFan},
       {0,0,0,0}
 };
 
@@ -146,7 +189,6 @@ Console::cmd_list_t *Console::mCmdTable[] =
 		(cmd_list_t*)configureCommands,
         0
 };
-
 
 void printWifiInfo()
 {
@@ -166,114 +208,66 @@ static int jsoneq(const char *json, jsmntok_t *tok, const char *s)
     return -1;
 }
 
-void parseRequestJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
+void parseSetJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
 {
-    printf("parse request\n");
-    if (jsoneq(msg, &tokens[2], "thresholds") == 0)
-    {
-        sThresholds_t thresholds;
-        NvmConfig::getThresholds(&thresholds);
-
-        char buffer[64];
-        memset(buffer, 0, 64);
-        snprintf(buffer, 64,
-                "{"
-                "\"tempLow\":%d,"
-                "\"tempHigh\":%d,"
-                "\"humidLow\":%d,"
-                "\"humidHigh\":%d"
-                "}", thresholds.tempLow,
-                thresholds.tempHigh,
-                thresholds.humidLow,
-                thresholds.humidHigh);
-
-        printInfo("JSON out");
-        printf("%s\n" ,  buffer);
-
-
-        printInfo("MQTT Publish");
-        if(MQTT_Interface::publish("mbed", (uint8_t *)buffer, strlen(buffer)))
-            printf(RED("FAIL\n"));
-        else
-            printf(GREEN("OK\n"));
-    } else if (jsoneq(msg, &tokens[2], "a1") == 0) //alarm request
-        {
-            sAlarmTimes_t alarms;
-            NvmConfig::getAlarms(&alarms);
-
-            char buffer[64];
-            memset(buffer, 0, 64);
-            snprintf(buffer, 64,
-                    "{"
-                    "\"onHour\":%d,"
-                    "\"onMinute\":%d,"
-                    "\"offHour\":%d,"
-                    "\"offMinute\":%d"
-                    "}", alarms.lightOn.hour,
-                    alarms.lightOn.minute,
-                    alarms.lightOff.hour,
-                    alarms.lightOff.minute);
-
-            printInfo("JSON out");
-            printf("%s\n" ,  buffer);
-
-            printInfo("MQTT Publish");
-            if(MQTT_Interface::publish("mbed", (uint8_t *)buffer, strlen(buffer)))
-                printf(RED("FAIL\n"));
-            else
-                printf(GREEN("OK\n"));
-        }
-}
-
-
-void parseTempThreshJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
-{
-    sThresholds_t thresholds;
-    NvmConfig::getThresholds(&thresholds);
-
     char value[16];
-    memset(value, 0, 16);
-
-    /* Loop over all keys of the root object */
-    for (int i = 1; i < tokenCount; i++)
+    for(int i = 1; i < tokenCount; i++)
     {
-        if (jsoneq(msg, &tokens[i], "tempLow") == 0)
+        if (jsoneq(msg, &tokens[i], "inline") == 0)
         {
             int len = tokens[i+1].end-tokens[i+1].start;
             memcpy(value, msg + tokens[i+1].start, len);
             value[len] = 0;
 
-            thresholds.tempLow = atoi(value);
+            printf("inline set speed : %s\n", value);
 
-            i++;
-        } else if (jsoneq(msg, &tokens[i], "tempHigh") == 0)
-        {
-            int len = tokens[i+1].end-tokens[i+1].start;
-            memcpy(value, msg + tokens[i+1].start, len);
-            value[len] = 0;
-
-            thresholds.tempHigh = atoi(value);
-
-            i++;
-        } else if (jsoneq(msg, &tokens[i], "humidLow") == 0)
-        {
-            int len = tokens[i+1].end-tokens[i+1].start;
-            memcpy(value, msg + tokens[i+1].start, len);
-            value[len] = 0;
-
-            thresholds.humidLow = atoi(value);
-
-            i++;
-        } else if (jsoneq(msg, &tokens[i], "humidHigh") == 0)
-        {
-            int len = tokens[i+1].end-tokens[i+1].start;
-            memcpy(value, msg + tokens[i+1].start, len);
-            value[len] = 0;
-
-            thresholds.humidHigh = atoi(value);
+            if(!strcmp(value, "off"))
+            {
+                fan.setSpeed(INLINE_OFF);
+            }else if(!strcmp(value, "low"))
+            {
+                fan.setSpeed(INLINE_LOW_SPEED);
+            }else if(!strcmp(value, "high"))
+            {
+                fan.setSpeed(INLINE_HIGH_SPEED);
+            }
         }
     }
-    NvmConfig::setThresholds(&thresholds);
+}
+
+void sendThresholds()
+{
+    sTempThresholds_t thresholds;
+    NvmConfig::getThresholds(&thresholds);
+
+    printf("send Thresholds\n");
+    char buffer[128];
+    memset(buffer, 0, 128);
+    snprintf(buffer, 128,
+            "{\"th\":{"
+            "\"i_ov\":%d,"
+            "\"il_off\":%d,"
+            "\"il_on\":%d,"
+            "\"ih_off\":%d,"
+            "\"ih_on\":%d,"
+            "\"a_t\":%d,"
+            "\"a_h\":%d"
+            "}}", thresholds.inlineOverride, thresholds.inlineLowOff, thresholds.inlineLowOn, \
+                thresholds.inlineHighOff, thresholds.inlineHighOn, \
+                thresholds.tempAlarm, thresholds.humidAlarm);
+
+    printf("buffer[%d]: ", strlen(buffer));
+    diag_dump_buf(buffer, strlen(buffer));
+
+    MQTT_Interface::publish("up", (uint8_t*)buffer, strlen(buffer), 1);
+}
+
+void parseRequestJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
+{
+    if (jsoneq(msg, &tokens[2], "thresholds") == 0)
+    {
+        sendThresholds();
+    }
 }
 
 void parseEpochTimeJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
@@ -313,32 +307,36 @@ void messageIn(MQTT::MessageData& md)
     memcpy(msg, message.payload, message.payloadlen);
     msg[message.payloadlen] = '\0';
 
-
-    int r = jsmn_parse(&parser, msg, strlen(msg), tokens, 16);
-//    printf("jsmn_parse: %d\n", r);
+    int tokenCount = jsmn_parse(&parser, msg, strlen(msg), tokens, 16);
 
     /* Assume the top-level element is an object */
-    if (r < 1 || tokens[0].type != JSMN_OBJECT)
+    if (tokenCount < 1 || tokens[0].type != JSMN_OBJECT)
     {
-        printf("Object expected\n");
+        INFO_TRACE("MQTT_IN", "No JSON OBJ\n");
         return;
     }
 
     /* Loop over all keys of the root object */
-//    for (int i = 1; i < r; i++)
-//    {
-    if (jsoneq(msg, &tokens[1], "timestamp") == 0)
-            parseEpochTimeJsonObj(tokens, r, msg);
-
-    if (jsoneq(msg, &tokens[1], "tempLow") == 0)
-        parseTempThreshJsonObj(tokens, r, msg);
-
-    if (jsoneq(msg, &tokens[1], "request") == 0)
+    for (int i = 1; i < tokenCount; i++)
     {
-        printf("request obj\n");
-        parseRequestJsonObj(tokens, r, msg);
-    }
+        if (jsoneq(msg, &tokens[1], "timestamp") == 0)
+        {
+            parseEpochTimeJsonObj(tokens, tokenCount, msg);
+            return;
+        }
 
+        if (jsoneq(msg, &tokens[1], "request") == 0)
+        {
+            parseRequestJsonObj(tokens, tokenCount, msg);
+            return;
+        }
+
+        if (jsoneq(msg, &tokens[1], "set") == 0)
+        {
+            parseSetJsonObj(tokens, tokenCount, msg);
+            return;
+        }
+    }
 }
 
 static void mqttConnected(void)
@@ -351,22 +349,36 @@ static void mqttConnected(void)
     char buffer[64];
     memset(buffer, 0, 64);
     snprintf(buffer, 64,
-            "{"
-            "\"request\":\"timestamp\"}");
+            "{\"request\":\"timestamp\"}");
 
     MQTT_Interface::publish("up", (uint8_t*)buffer, strlen(buffer));
 }
 
 void sendTrendFrame(int temperature, int humidity, int light)
 {
+    char fanSpeed[5] = {0};
+    switch(fan.getSpeed())
+    {
+    case INLINE_OFF:
+        memcpy(fanSpeed, "off", 3);
+        break;
+    case INLINE_LOW_SPEED:
+        memcpy(fanSpeed, "low", 3);
+        break;
+    case INLINE_HIGH_SPEED:
+        memcpy(fanSpeed, "high", 4);
+        break;
+    }
+
     char buffer[64];
     memset(buffer, 0, 64);
     snprintf(buffer, 64,
             "{\"trend\":{"
             "\"temp\":%d,"
             "\"humid\":%d,"
-            "\"light\":%d"
-            "}}", temperature, humidity, light);
+            "\"light\":%d,"
+            "\"inline\":\"%s\""
+            "}}", temperature, humidity, light, fanSpeed);
 
     MQTT_Interface::publish("up", (uint8_t*)buffer, strlen(buffer));
 }
@@ -384,17 +396,47 @@ int sampleLight()
     return 0;
 }
 
+void runTrend()
+{
+    if(trendTick < tickTimer.read_ms())
+    {
+        uint16_t temp = 0;
+        uint16_t humid = 0;
+        sample_dht22(temp, humid);
+
+        int light = sampleLight();
+
+        INFO_TRACE("TREND", "T : %0.1f C\tH : %0.1f\tL : %d\n", (temp/10.0), (humid/10.0), light);
+
+        lcdController->updateStaticValues(temp, humid, light);
+
+        sendTrendFrame(temp, humid, light);
+
+        trendTick = tickTimer.read_ms() + TREND_DUTY_MS;
+    }
+}
+
+void wifiConnectedCallback(MQTTNetwork* network, MQTT::Client<MQTTNetwork, Countdown> *client)
+{
+    MQTT_Interface::init(network, client);
+
+    sNetworkCredentials_t wifiCredentials;
+    NvmConfig::getWifiCredentials(&wifiCredentials);
+
+    MQTT_Interface::connect(wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
+    MQTT_Interface::setConnectedCallback(mqttConnected);
+}
+
 int main()
 {
     printf(CYAN_B("\nWiFi monitor\n\n"));
-
     INFO_TRACE("Version", "0x%08X\n", MBED_CONF_APP_VERSION);
     INFO_TRACE("Build", "%s\n", SWdatetime);
 
 	dht22 = new DHT22(A0);
 
 	Console::init(&pc, "wi_try");
-	wait(1);
+	wait(0.2);
 
 	I2C i2cEEP(D14, D15);
 	printInfo("EEPROM");
@@ -420,85 +462,83 @@ int main()
         lcdController->logLine(version);
     }
 
-	static sNetworkCredentials_t wifiCredentials;
-	NvmConfig::getWifiCredentials(&wifiCredentials);
+    MQTTNetwork mqttNetwork(&wifi);
+    MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
 
-	INFO_TRACE("WIFI", "Connecting..\n");
-	int ret = wifi.connect(wifiCredentials.wifi_ssid, wifiCredentials.wifi_pw, NSAPI_SECURITY_WPA_WPA2);
-	if (ret != 0) {
 
-	    INFO_TRACE("WIFI", RED("Connect Fail\n"));
-
-	    lcdController->logLine((char *)"WiFi Connect Fail");
-	    lcdController->logLine((char *)"Check Credentials");
-
-        INFO_TRACE("WIFI", YELLOW_B("Check Credentials\n"));
-	    while(1)
-	    {
-	        wait(1);
-	        lcdController->logRun();
-	    }
-	    return -1;
-	}
-
-	INFO_TRACE("WIFI", GREEN("Connect OK\n"));
-	lcdController->logLine((char *)"WiFi Connect OK");
-
-	{
-	    printWifiInfo();
-	    char ip[20];
-	    snprintf(ip, 20, "IP: %s", wifi.get_ip_address());
-	    lcdController->logLine(ip);
-	}
-
-	MQTTNetwork mqttNetwork(&wifi);
-	MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
-    MQTT_Interface::init(&mqttNetwork, &client);
-
-    MQTT_Interface::connect(wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
-    MQTT_Interface::setConnectedCallback(mqttConnected);
+    tickTimer.start();
+    int wifiWaitTimeout = 0;
 
     while (1)
-	{
+    {
         lcdController->logRun();
 
-        static int inCount = 1200;
+        switch (wifiState) {
+        case WIFI_STATUS_CONNECTING:
+        {
+            sNetworkCredentials_t wifiCredentials;
+            NvmConfig::getWifiCredentials(&wifiCredentials);
 
-        inCount++;
+            INFO_TRACE("WIFI", "Connecting..\n");
+
+            int ret = wifi.connect(wifiCredentials.wifi_ssid, wifiCredentials.wifi_pw, NSAPI_SECURITY_WPA_WPA2);
+            if (ret != 0) {
+
+                INFO_TRACE("WIFI", RED("Connect Fail\n"));
+
+                lcdController->logLine((char *)"WiFi Connect Fail");
+                lcdController->logLine((char *)"Check Credentials");
+                lcdController->logLine((char *)"Check WIFI");
+
+                INFO_TRACE("WIFI", YELLOW_B("Check Credentials\n"));
+                wifiState = WIFI_STATUS_DISCONNECTED;
+                continue;
+            }
+
+            INFO_TRACE("WIFI", GREEN("Connect OK\n"));
+            lcdController->logLine((char *)"WiFi Connect OK");
+
+            {
+                printWifiInfo();
+                char ip[20];
+                snprintf(ip, 20, "IP: %s", wifi.get_ip_address());
+                lcdController->logLine(ip);
+            }
+            wifiConnectedCallback(&mqttNetwork, &client);
+            wifiState = WIFI_STATUS_CONNECTED;
+        }
+        break;
+        case WIFI_STATUS_CONNECTED:
+        {
+            if(wifi.get_connection_status() == NSAPI_STATUS_DISCONNECTED)
+            {
+                printf(RED("WIFI connection fail: %d\n"), wifi.get_connection_status());
+                wifiState = WIFI_STATUS_DISCONNECTED;
+            }
+
+            if(MQTT_Interface::isConnected())
+                runTrend();
+        }
+        break;
+        case WIFI_STATUS_DISCONNECTED:
+        {
+            INFO_TRACE("WIFI", RED("Disconnected\n"));
+            wifiWaitTimeout = tickTimer.read_ms() + 30000;
+            wifiState = WIFI_STATUS_WAIT;
+        }
+        break;
+        case WIFI_STATUS_WAIT:
+        {
+            if(wifiWaitTimeout < tickTimer.read_ms())
+                    wifiState = WIFI_STATUS_CONNECTING;
+        }
+        break;
+        default:
+            break;
+        }
+
         wait(0.5);
-
-    	if(inCount > 20)
-    	{
-    	    inCount = 0;
-//    	    if(MQTT_Interface::isConnected())
-    	    {
-    	        uint16_t temp = 0;
-    	        uint16_t humid = 0;
-
-    	        sample_dht22(temp, humid);
-    	        printInfo("Temperature");// while (arrivedcount < 1)
-    	        printf("%d\n", temp);
-    	        printInfo("Humidity");
-    	        printf("%d\n", humid);
-
-    	        char line[20];
-    	        memset(line, 0, 20);
-    	        snprintf(line, 20, "temp: %d humid %d", temp ,humid);
-    	        lcdController->logLine(line);
-
-    	        int light = sampleLight();
-
-    	        lcdController->updateStaticValues(temp, humid, light);
-
-    	        sendTrendFrame(temp, humid, light);
-
-//    	        lcd->gotoxy(0, 4);
-//    	        lcd->puts(line);
-
-
-    	    }
-    	}
-	}
+    }
 
 	return 1;
 }

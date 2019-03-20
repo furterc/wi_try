@@ -10,10 +10,17 @@
 
 #include "mbed.h"
 
+enum eRelayState{
+    RELAY_NC = 0,
+    RELAY_NO = 1
+};
+
 class Relay : DigitalInOut
 {
+    eRelayState mState;
+
 public:
-    Relay(PinName pin);
+    Relay(PinName pin, eRelayState state = RELAY_NO);
     virtual ~Relay();
 
     void latch(int state);

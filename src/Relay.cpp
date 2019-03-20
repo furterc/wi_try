@@ -7,11 +7,12 @@
 
 #include <Relay.h>
 
-Relay::Relay(PinName pin) : DigitalInOut(pin)
+Relay::Relay(PinName pin, eRelayState state) : DigitalInOut(pin), mState(state)
 {
     output();
     mode(OpenDrainNoPull);
-    write(1);
+
+    write(state);
 }
 
 Relay::~Relay()
@@ -22,14 +23,17 @@ Relay::~Relay()
 void Relay::latch(int state)
 {
     if(state == 1)
-        write(0);
+        write(!mState);
     else
-        write(1);
+        write(mState);
 }
 
 int Relay::get()
 {
-    if(!read())
+    if(!read() && mState == RELAY_NO)
+        return 1;
+
+    if(read() && mState == RELAY_NC)
         return 1;
 
     return 0;
