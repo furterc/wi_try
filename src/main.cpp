@@ -17,6 +17,7 @@
 #include "Relay.h"
 #include "InlineFan.h"
 #include "InlineController.h"
+#include "Json.h"
 
 /* Build Date */
 const char *SWdatetime  =__DATE__ " " __TIME__;
@@ -198,43 +199,7 @@ void printWifiInfo()
     INFO_TRACE("IP", "%s\n", wifi.get_ip_address());
     INFO_TRACE("Netmask", "%s\n", wifi.get_netmask());
     INFO_TRACE("Gateway", "%s\n", wifi.get_gateway());
-    INFO_TRACE("RSSI", "%d\n", wifi.get_rssi());
-}
-
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s)
-{
-    if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
-            strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
-        return 0;
-    }
-    return -1;
-}
-
-void parseSetJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
-{
-    char value[16];
-    for(int i = 1; i < tokenCount; i++)
-    {
-        if (jsoneq(msg, &tokens[i], "inline") == 0)
-        {
-            int len = tokens[i+1].end-tokens[i+1].start;
-            memcpy(value, msg + tokens[i+1].start, len);
-            value[len] = 0;
-
-            printf("inline set speed : %s\n", value);
-
-            if(!strcmp(value, "off"))
-            {
-                fan.setSpeed(INLINE_OFF);
-            }else if(!strcmp(value, "low"))
-            {
-                fan.setSpeed(INLINE_LOW_SPEED);
-            }else if(!strcmp(value, "high"))
-            {
-                fan.setSpeed(INLINE_HIGH_SPEED);
-            }
-        }
-    }
+//    INFO_TRACE("RSSI", "%d\n", wifi.get_rssi());
 }
 
 void sendThresholds()
@@ -258,36 +223,217 @@ void sendThresholds()
                 thresholds.inlineHighOff, thresholds.inlineHighOn, \
                 thresholds.tempAlarm, thresholds.humidAlarm);
 
-    printf("buffer[%d]: ", strlen(buffer));
-    diag_dump_buf(buffer, strlen(buffer));
-
     MQTT_Interface::publish("up", (uint8_t*)buffer, strlen(buffer), 1);
 }
 
-void parseRequestJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
+int getJsonObjectData(Json *json, int objectIndex, char *buffer, int bufferSize)
 {
-    if (jsoneq(msg, &tokens[2], "thresholds") == 0)
+    const char *valueStart  = json->tokenAddress(objectIndex);
+    int valueLength = json->tokenLength(objectIndex);
+
+    if(valueLength > bufferSize)
+        return -1;
+
+    strncpy(buffer, valueStart, valueLength);
+    buffer[valueLength] = 0;
+
+    return 0;
+}
+
+void setThresholds(Json *json)
+{
+    int thresholdIndex = json->findKeyIndexIn("t", 0);
+    if(thresholdIndex > 0)
     {
-        sendThresholds();
+        int thresholdChildIndex = json->findChildIndexOf( thresholdIndex, -1 );
+        if ( thresholdChildIndex > 0 )
+        {
+            char childData[128] = {0};
+            getJsonObjectData(json, thresholdChildIndex, childData, 128);
+
+            sTempThresholds_t thresholds;
+            NvmConfig::getThresholds(&thresholds);
+
+            Json thJson(childData, strlen(childData));
+            char parentsChildData[16] = {0};
+
+            int parentIdx = thJson.findKeyIndexIn("i_ov", 0);
+            if(parentIdx > 0)
+            {
+                int speedChildIndex = json->findChildIndexOf(parentIdx, -1);
+                if(speedChildIndex > 0)
+                {
+                    getJsonObjectData(&thJson, speedChildIndex, parentsChildData, 16);
+                    thresholds.inlineOverride = atoi(parentsChildData);
+                }
+            }
+
+            parentIdx = thJson.findKeyIndexIn("il_off", 0);
+            if(parentIdx > 0)
+            {
+                int speedChildIndex = json->findChildIndexOf(parentIdx, -1);
+                if(speedChildIndex > 0)
+                {
+                    getJsonObjectData(&thJson, speedChildIndex, parentsChildData, 16);
+                    thresholds.inlineLowOff= atoi(parentsChildData);
+                }
+            }
+
+            parentIdx = thJson.findKeyIndexIn("il_on", 0);
+            if(parentIdx > 0)
+            {
+                int speedChildIndex = json->findChildIndexOf(parentIdx, -1);
+                if(speedChildIndex > 0)
+                {
+                    getJsonObjectData(&thJson, speedChildIndex, parentsChildData, 16);
+                    thresholds.inlineLowOn= atoi(parentsChildData);
+                }
+
+            }
+
+            parentIdx = thJson.findKeyIndexIn("ih_off", 0);
+            if(parentIdx > 0)
+            {
+                int speedChildIndex = json->findChildIndexOf(parentIdx, -1);
+                if(speedChildIndex > 0)
+                {
+                    getJsonObjectData(&thJson, speedChildIndex, parentsChildData, 16);
+                    thresholds.inlineHighOff= atoi(parentsChildData);
+                }
+            }
+
+            parentIdx = thJson.findKeyIndexIn("ih_on", 0);
+            if(parentIdx > 0)
+            {
+                int speedChildIndex = json->findChildIndexOf(parentIdx, -1);
+                if(speedChildIndex > 0)
+                {
+                    getJsonObjectData(&thJson, speedChildIndex, parentsChildData, 16);
+                    thresholds.inlineHighOn= atoi(parentsChildData);
+                }
+            }
+
+            parentIdx = thJson.findKeyIndexIn("a_t", 0);
+            if(parentIdx > 0)
+            {
+                int speedChildIndex = json->findChildIndexOf(parentIdx, -1);
+                if(speedChildIndex > 0)
+                {
+                    getJsonObjectData(&thJson, speedChildIndex, parentsChildData, 16);
+                    thresholds.tempAlarm = atoi(parentsChildData);
+                }
+            }
+
+            parentIdx = thJson.findKeyIndexIn("a_h", 0);
+            if(parentIdx > 0)
+            {
+                int speedChildIndex = json->findChildIndexOf(parentIdx, -1);
+                if(speedChildIndex > 0)
+                {
+                    getJsonObjectData(&thJson, speedChildIndex, parentsChildData, 16);
+                    thresholds.humidAlarm = atoi(parentsChildData);
+                }
+
+            }
+
+            //update thresholds
+            NvmConfig::setThresholds(&thresholds);
+        }
     }
 }
 
-void parseEpochTimeJsonObj(jsmntok_t *tokens, int tokenCount, char *msg)
+void setTime(Json *json)
 {
-    if (jsoneq(msg, &tokens[1], "timestamp") == 0)
+    int timeIndex = json->findKeyIndexIn("t", 0);
+    if(timeIndex > 0)
     {
-        char value[32] = {0};
-        int len = tokens[2].end-tokens[2].start;
-        memcpy(value, msg + tokens[2].start, len);
-        value[len] = 0;
+        int timeChildIndex = json->findChildIndexOf( timeIndex, -1 );
+        if ( timeChildIndex > 0 )
+        {
+            char childData[16] = {0};
+            getJsonObjectData(json, timeChildIndex, childData, 16);
 
-        char *pEnd;
-        time_t timestamp = strtoull(value, &pEnd, 10);
-        timestamp += 7200;  // add 2 hours for CAT
+            char *pEnd;
+            time_t timestamp = strtoull(childData, &pEnd, 10);
+            timestamp += 7200;  // add 2 hours for CAT
 
-        struct tm epoch_time;
-        memcpy(&epoch_time, localtime(&timestamp), sizeof (struct tm));
-        set_time(mktime(&epoch_time));
+            struct tm epoch_time;
+            memcpy(&epoch_time, localtime(&timestamp), sizeof (struct tm));
+            set_time(mktime(&epoch_time));
+        }
+    }
+}
+
+void setInlineFan(Json *json)
+{
+    int speedIndex = json->findKeyIndexIn("speed", 0);
+    if(speedIndex > 0)
+    {
+        int speedChildIndex = json->findChildIndexOf(speedIndex, -1);
+        if(speedChildIndex > 0)
+        {
+            char childData[16] = {0};
+            getJsonObjectData(json,  speedChildIndex, childData, 16);
+
+            printf("inline set speed : %s\n", childData);
+
+            if(!strcmp(childData, "off"))
+            {
+                fan.setSpeed(INLINE_OFF);
+            }else if(!strcmp(childData, "low"))
+            {
+                fan.setSpeed(INLINE_LOW_SPEED);
+            }else if(!strcmp(childData, "high"))
+            {
+                fan.setSpeed(INLINE_HIGH_SPEED);
+            }
+        }
+    }
+}
+
+void handleSetJsonMsg(Json *json, int typeChildIndex)
+{
+    int setMessageIndex = json->findChildIndexOf( typeChildIndex, -1 );
+    if ( setMessageIndex > 0 )
+    {
+        char setWho[16] = {0};
+        getJsonObjectData(json, setMessageIndex, setWho, 16);
+        INFO_TRACE("JSON", "SET : %s\n", setWho);
+
+        if(!strcmp(setWho, "th"))
+        {
+            setThresholds(json);
+            return;
+        }
+
+        if(!strcmp(setWho, "time"))
+        {
+            setTime(json);
+            return;
+        }
+
+        if(!strcmp(setWho, "inline"))
+        {
+            setInlineFan(json);
+            return;
+        }
+    }
+}
+
+void handleGetJsonMsg(Json *json, int typeChildIndex)
+{
+    int setMessageIndex = json->findChildIndexOf( typeChildIndex, -1 );
+    if ( setMessageIndex > 0 )
+    {
+        char getWho[16] = {0};
+        getJsonObjectData(json, setMessageIndex, getWho, 16);
+        INFO_TRACE("JSON", "GET : %s\n", getWho);
+
+        if(!strcmp(getWho, "thresholds"))
+        {
+            sendThresholds();
+            return;
+        }
     }
 }
 
@@ -299,45 +445,35 @@ void messageIn(MQTT::MessageData& md)
 //    printf("qos %d, retained %d, dup %d, packetid %d\n", message.qos, message.retained, message.dup, message.id);
     INFO_TRACE("MQTT IN", "%.*s\n", message.payloadlen, (char*)message.payload);
 
-    jsmn_parser parser;
-    jsmntok_t tokens[16];
+    char jsonString[128];
+    memcpy(jsonString, message.payload, message.payloadlen);
+    jsonString[message.payloadlen] = '\0';
+    Json json (jsonString, strlen(jsonString));
 
-    jsmn_init(&parser);
-
-    char msg[128];
-    memcpy(msg, message.payload, message.payloadlen);
-    msg[message.payloadlen] = '\0';
-
-    int tokenCount = jsmn_parse(&parser, msg, strlen(msg), tokens, 16);
-
-    /* Assume the top-level element is an object */
-    printf("tokens[0].type = %d\n", tokens[0].type);
-    if (tokenCount < 1 || tokens[0].type != JSMN_OBJECT)
+    if(!json.isValidJson())
     {
         INFO_TRACE("MQTT_IN", YELLOW("No JSON OBJ\n"));
         return;
     }
 
-    /* Loop over all keys of the root object */
-    for (int i = 1; i < tokenCount; i++)
+    if(json.type(0) != JSMN_OBJECT)
     {
-        if (jsoneq(msg, &tokens[1], "timestamp") == 0)
-        {
-            parseEpochTimeJsonObj(tokens, tokenCount, msg);
-            return;
-        }
+        INFO_TRACE("MQTT_IN", YELLOW("Invalid JSON, ROOT Element is not Object: %s\n"), jsonString);
+        return;
+    }
 
-        if (jsoneq(msg, &tokens[1], "request") == 0)
-        {
-            parseRequestJsonObj(tokens, tokenCount, msg);
-            return;
-        }
+    int messageTypeIndex = json.findKeyIndexIn("set", 0);
+    if(messageTypeIndex > 0)
+    {
+       handleSetJsonMsg(&json, messageTypeIndex);
+       return;
+    }
 
-        if (jsoneq(msg, &tokens[1], "set") == 0)
-        {
-            parseSetJsonObj(tokens, tokenCount, msg);
-            return;
-        }
+    messageTypeIndex = json.findKeyIndexIn("get", 0);
+    if(messageTypeIndex > 0)
+    {
+       handleGetJsonMsg(&json, messageTypeIndex);
+       return;
     }
 }
 
