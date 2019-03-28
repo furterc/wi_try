@@ -16,6 +16,7 @@
 #include "DHT22.h"
 #include "Relay.h"
 #include "InlineFan.h"
+#include "InlineController.h"
 
 /* Build Date */
 const char *SWdatetime  =__DATE__ " " __TIME__;
@@ -67,6 +68,7 @@ Relay rl4(A4, RELAY_NO);
 Relay *relays[4] = {&inlinePower, &inlineHighSpeed, &rl3, &rl4};
 
 InlineFan fan(&inlinePower, &inlineHighSpeed);
+InlineController inlineController(&fan);
 
 /* TREND Defines */
 #define TREND_DUTY_MS   30000 //ms
@@ -295,8 +297,7 @@ void messageIn(MQTT::MessageData& md)
     printf("\n");
 //    printInfo(GREEN("MQTT MSG IN"));
 //    printf("qos %d, retained %d, dup %d, packetid %d\n", message.qos, message.retained, message.dup, message.id);
-    printInfo("MSG PAYLOAD");
-    printf("%.*s\n", message.payloadlen, (char*)message.payload);
+    INFO_TRACE("MQTT IN", "%.*s\n", message.payloadlen, (char*)message.payload);
 
     jsmn_parser parser;
     jsmntok_t tokens[16];
@@ -310,9 +311,10 @@ void messageIn(MQTT::MessageData& md)
     int tokenCount = jsmn_parse(&parser, msg, strlen(msg), tokens, 16);
 
     /* Assume the top-level element is an object */
+    printf("tokens[0].type = %d\n", tokens[0].type);
     if (tokenCount < 1 || tokens[0].type != JSMN_OBJECT)
     {
-        INFO_TRACE("MQTT_IN", "No JSON OBJ\n");
+        INFO_TRACE("MQTT_IN", YELLOW("No JSON OBJ\n"));
         return;
     }
 
@@ -404,6 +406,8 @@ void runTrend()
         uint16_t humid = 0;
         sample_dht22(temp, humid);
 
+        inlineController.updateTemperature((int)temp/10.0);
+
         int light = sampleLight();
 
         INFO_TRACE("TREND", "T : %0.1f C\tH : %0.1f\tL : %d\n", (temp/10.0), (humid/10.0), light);
@@ -454,6 +458,8 @@ int main()
     lcd = new LCDPCF8574(&i2cLCD, 0);
     lcdController = new LCDController(lcd);
 
+
+
     {
         char version[20];
         snprintf(version, 20, "ver:0x%08X", MBED_CONF_APP_VERSION);
@@ -462,9 +468,15 @@ int main()
         lcdController->logLine(version);
     }
 
+
+    {
+        sTempThresholds_t thresholds;
+        NvmConfig::getThresholds(&thresholds);
+        inlineController.setThresholds(&thresholds);
+    }
+
     MQTTNetwork mqttNetwork(&wifi);
     MQTT::Client<MQTTNetwork, Countdown> client = MQTT::Client<MQTTNetwork, Countdown>(mqttNetwork);
-
 
     tickTimer.start();
     int wifiWaitTimeout = 0;

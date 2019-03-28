@@ -56,7 +56,7 @@ int LCDController::logLine(char *data)
 //    printf("\n\nlog add @ %p = %s\n", entry, data);
     entry[len] = 0;
 
-    for(int i = 0; i < 3; i++)
+    for(int i = 0; i < 2; i++)
     {
         if(lcdLines[i] == 0)
         {
@@ -86,7 +86,7 @@ int LCDController::logLine(char *data)
 
 void LCDController::logUpdateDisplay()
 {
-    for(uint8_t idx = 0; idx < 3; idx++)
+    for(uint8_t idx = 0; idx < 2; idx++)
     {
         if(lcdLines[idx] != 0)
             writeLine(lcdLines[idx], idx);
@@ -113,6 +113,7 @@ void LCDController::logUpdate()
 //            printf("lcdLines[%d] = %s\n", i, lcdLines[i]);
 //    }
 
+    // queue empty
     if(lcdLines[0] == 0)
     {
 //        mLcd->led(1);
@@ -133,14 +134,14 @@ void LCDController::logUpdate()
     lcdLines[0] = lcdLines[1];
     lcdLines[1] = 0;
 
-    if(lcdLines[2] == 0)
-    {
-        logUpdateDisplay();
-        return;
-    }
+//    if(lcdLines[2] == 0)
+//    {
+//        logUpdateDisplay();
+//        return;
+//    }
 
-    lcdLines[1] = lcdLines[2];
-    lcdLines[2] = 0;
+//    lcdLines[1] = lcdLines[2];
+//    lcdLines[2] = 0;
 
     char *data = 0;
     if(linked_list_Pop(&mLinkedList, (void **)&data) == -1)

@@ -1021,7 +1021,7 @@
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC_ARM"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1552942070.38"/>
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1553383250.63"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SPI=1"/>
                                     
@@ -1578,7 +1578,7 @@
                                     
                                     <listOptionValue builtIn="false" value="TOOLCHAIN_GCC_ARM"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1552942070.38"/>
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1553383250.63"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SPI=1"/>
                                     
