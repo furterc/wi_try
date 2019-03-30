@@ -35,6 +35,12 @@ void InlineController::setThresholds(sTempThresholds_t *th)
 
 int InlineController::updateTemperature(int temp)
 {
+    if(mThresholds.inlineOverride == 1)
+    {
+        printf("inline -- overrided\n");
+        return 1;
+    }
+
     if(temp > mThresholds.inlineHighOn)
         return updateFanSpeed(INLINE_HIGH_SPEED);
 

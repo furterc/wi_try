@@ -237,7 +237,7 @@ int getJsonObjectData(Json *json, int objectIndex, char *buffer, int bufferSize)
     strncpy(buffer, valueStart, valueLength);
     buffer[valueLength] = 0;
 
-    return 0;
+    return valueLength;
 }
 
 void setThresholds(Json *json)
@@ -389,6 +389,33 @@ void setInlineFan(Json *json)
             }
         }
     }
+
+    int overrideIndex = json->findKeyIndexIn("override", 0);
+    if(overrideIndex > 0)
+    {
+        int speedChildIndex = json->findChildIndexOf(overrideIndex, -1);
+        if(speedChildIndex > 0)
+        {
+            char childData[16] = {0};
+            if(getJsonObjectData(json,  speedChildIndex, childData, 16) > 0)
+            {
+                int override = atoi(childData);
+
+                if(!override || override == 1)
+                {
+                    sTempThresholds_t thresholds;
+                    NvmConfig::getThresholds(&thresholds);
+
+                    thresholds.inlineOverride = override;
+                    printf("inline set override: %d\n", override);
+                    inlineController.setThresholds(&thresholds);
+                    NvmConfig::setThresholds(&thresholds);
+                }
+            }
+        }
+
+    }
+
 }
 
 void handleSetJsonMsg(Json *json, int typeChildIndex)
@@ -482,14 +509,14 @@ static void mqttConnected(void)
     const char *topic = "down";
     MQTT_Interface::subscribe(topic, messageIn);
 
-    INFO_TRACE("NETWORK", "Request Time\n");
+    INFO_TRACE("MQTT", "Request Time\n");
 
     char buffer[64];
     memset(buffer, 0, 64);
     snprintf(buffer, 64,
-            "{\"request\":\"timestamp\"}");
+            "{\"get\":\"time\"}");
 
-    MQTT_Interface::publish("up", (uint8_t*)buffer, strlen(buffer));
+    MQTT_Interface::publish("up", (uint8_t*)buffer, strlen(buffer), 1);
 }
 
 void sendTrendFrame(int temperature, int humidity, int light)
