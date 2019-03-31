@@ -336,6 +336,7 @@ void setThresholds(Json *json)
 
             }
 
+            inlineController.setThresholds(&thresholds);
             //update thresholds
             NvmConfig::setThresholds(&thresholds);
         }
@@ -390,6 +391,9 @@ void setInlineFan(Json *json)
         }
     }
 
+    sTempThresholds_t thresholds;
+    NvmConfig::getThresholds(&thresholds);
+
     int overrideIndex = json->findKeyIndexIn("override", 0);
     if(overrideIndex > 0)
     {
@@ -403,9 +407,6 @@ void setInlineFan(Json *json)
 
                 if(!override || override == 1)
                 {
-                    sTempThresholds_t thresholds;
-                    NvmConfig::getThresholds(&thresholds);
-
                     thresholds.inlineOverride = override;
                     printf("inline set override: %d\n", override);
                     inlineController.setThresholds(&thresholds);
@@ -413,9 +414,9 @@ void setInlineFan(Json *json)
                 }
             }
         }
-
     }
 
+    lcdController->updateFanStatus(fan.getSpeed(), thresholds.inlineOverride);
 }
 
 void handleSetJsonMsg(Json *json, int typeChildIndex)
@@ -502,6 +503,12 @@ void messageIn(MQTT::MessageData& md)
        handleGetJsonMsg(&json, messageTypeIndex);
        return;
     }
+}
+
+void inlineStateChange(eInlineFanSpeed speed)
+{
+    printf("inline state change\n");
+    lcdController->updateFanStatus(speed, 0);
 }
 
 static void mqttConnected(void)
@@ -636,6 +643,7 @@ int main()
         sTempThresholds_t thresholds;
         NvmConfig::getThresholds(&thresholds);
         inlineController.setThresholds(&thresholds);
+        inlineController.setStateChangeCallback(inlineStateChange);
     }
 
     MQTTNetwork mqttNetwork(&wifi);

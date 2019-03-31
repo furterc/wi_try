@@ -7,7 +7,7 @@
 
 #include <InlineController.h>
 
-InlineController::InlineController(InlineFan *fan) : mFan(fan)
+InlineController::InlineController(InlineFan *fan) : mFan(fan), stateChange(0)
 {
 
 }
@@ -28,6 +28,12 @@ int InlineController::updateFanSpeed(eInlineFanSpeed speed)
     return 0;
 }
 
+void InlineController::setStateChangeCallback(void (*state_change)(eInlineFanSpeed speed))
+{
+    if(state_change)
+        stateChange = state_change;
+}
+
 void InlineController::setThresholds(sTempThresholds_t *th)
 {
     memcpy(&mThresholds, th, sizeof(sTempThresholds_t));
@@ -41,19 +47,34 @@ int InlineController::updateTemperature(int temp)
         return 1;
     }
 
+    eInlineFanSpeed speed =  INLINE_OFF;
+
     if(temp > mThresholds.inlineHighOn)
-        return updateFanSpeed(INLINE_HIGH_SPEED);
+    {
+        speed =  INLINE_HIGH_SPEED;
+        if(stateChange)
+            stateChange(speed);
+        return updateFanSpeed(speed);
+    }
 
     if(temp > mThresholds.inlineLowOn)
     {
         if(getSpeed() == INLINE_HIGH_SPEED && temp > mThresholds.inlineHighOff)
             return 0;
 
-        return updateFanSpeed(INLINE_LOW_SPEED);
+        speed =  INLINE_LOW_SPEED;
+        if(stateChange)
+            stateChange(speed);
+        return updateFanSpeed(speed);
     }
 
     if(temp > mThresholds.inlineHighOff)
-        return updateFanSpeed(INLINE_OFF);
+    {
+        speed =  INLINE_OFF;
+        if(stateChange)
+            stateChange(speed);
+        return updateFanSpeed(speed);
+    }
 
     return 0;
 }

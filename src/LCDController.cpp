@@ -95,7 +95,39 @@ void LCDController::logUpdateDisplay()
     }
 }
 
+void LCDController::updateFanStatus(eInlineFanSpeed fanSpeed, uint8_t override)
+{
+    //1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+    //I N L I N E : A U T  O     H  I  G  H
+    char staticLine[20] = {0};
+
+    char speed[5] = {0};
+    switch (fanSpeed)
+    {
+    case INLINE_OFF:
+        memcpy(speed, "OFF", 3);
+        break;
+
+    case INLINE_LOW_SPEED:
+        memcpy(speed, "LOW", 3);
+        break;
+
+    case INLINE_HIGH_SPEED:
+        memcpy(speed, "HIGH", 4);
+        break;
+    }
+
+    char mode[5] = {0};
+    if(override == 1)
+        memcpy(mode, "MAN", 3);
+    else
+        memcpy(mode, "AUTO", 4);
+
+    snprintf(staticLine, 20, "INLINE:%4s  %4s", mode, speed);
+    writeLine(staticLine, 2);
+}
 void LCDController::updateStaticValues(int temp, int humidity, bool light)
+
 {
     //1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
     //t : d d . d     h :  d  d  .  d         l  :  1

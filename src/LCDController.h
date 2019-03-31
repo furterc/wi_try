@@ -11,6 +11,7 @@
 
 #include "LCDPCF8574.h"
 #include "linked_list.h"
+#include "InlineFan.h"
 
 #define LCD_LOG_ENTRIES     16
 #define LCD_LOG_TIMEOUT     5000
@@ -35,6 +36,7 @@ public:
     void logUpdateDisplay();
 
     void updateStaticValues(int temp, int humidity, bool light);
+    void updateFanStatus(eInlineFanSpeed fanSpeed, uint8_t override);
 
     void clearLine(uint8_t line);
     void writeLine(char *data, uint8_t line);

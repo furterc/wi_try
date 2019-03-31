@@ -18,11 +18,13 @@ class InlineController
     sTempThresholds_t mThresholds;
 
     int updateFanSpeed(eInlineFanSpeed speed);
+    void (*stateChange)(eInlineFanSpeed speed);
 
 public:
     InlineController(InlineFan *fan);
     virtual ~InlineController();
 
+    void setStateChangeCallback(void (*stateChange)(eInlineFanSpeed speed));
     void setThresholds(sTempThresholds_t *th);
 
     int updateTemperature(int temp);
