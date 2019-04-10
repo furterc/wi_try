@@ -18,6 +18,9 @@
 #include "InlineFan.h"
 #include "InlineController.h"
 #include "Json.h"
+#include "ThresholdCheck.h"
+
+//#define MBED_CONF_RTOS_MAIN_THREAD_STACK_SIZE 8192
 
 /* Build Date */
 const char *SWdatetime  =__DATE__ " " __TIME__;
@@ -63,10 +66,10 @@ DigitalIn lightSense(D4);
 /* Relays */
 Relay inlinePower(A1, RELAY_NC);
 Relay inlineHighSpeed(A2, RELAY_NO);
-Relay rl3(A3, RELAY_NO);
-Relay rl4(A4, RELAY_NO);
+Relay ductAircooler(A3, RELAY_NO);
+Relay hpsLight(A4, RELAY_NO);
 
-Relay *relays[4] = {&inlinePower, &inlineHighSpeed, &rl3, &rl4};
+Relay *relays[4] = {&inlinePower, &inlineHighSpeed, &ductAircooler, &hpsLight};
 
 InlineFan fan(&inlinePower, &inlineHighSpeed);
 InlineController inlineController(&fan);
@@ -74,6 +77,9 @@ InlineController inlineController(&fan);
 /* TREND Defines */
 #define TREND_DUTY_MS   30000 //ms
 int trendTick = 0;
+
+/* ThresholdCheck */
+ThresholdCheck *thresholdCheck = 0;
 
 /* ----------------------- FUNCTIONS ----------------------- */
 void inlineFan(int argc,char *argv[])
@@ -221,7 +227,7 @@ void sendThresholds()
             "\"a_h\":%d"
             "}}", thresholds.inlineOverride, thresholds.inlineLowOff, thresholds.inlineLowOn, \
                 thresholds.inlineHighOff, thresholds.inlineHighOn, \
-                thresholds.tempAlarm, thresholds.humidAlarm);
+                thresholds.alarmTemperature, thresholds.alarmHumidity);
 
     MQTT_Interface::publish("up", (uint8_t*)buffer, strlen(buffer), 1);
 }
@@ -320,7 +326,7 @@ void setThresholds(Json *json)
                 if(speedChildIndex > 0)
                 {
                     getJsonObjectData(&thJson, speedChildIndex, parentsChildData, 16);
-                    thresholds.tempAlarm = atoi(parentsChildData);
+                    thresholds.alarmTemperature = atoi(parentsChildData);
                 }
             }
 
@@ -331,13 +337,13 @@ void setThresholds(Json *json)
                 if(speedChildIndex > 0)
                 {
                     getJsonObjectData(&thJson, speedChildIndex, parentsChildData, 16);
-                    thresholds.humidAlarm = atoi(parentsChildData);
+                    thresholds.alarmHumidity = atoi(parentsChildData);
                 }
 
             }
 
-            inlineController.setThresholds(&thresholds);
             //update thresholds
+            inlineController.setThresholds(&thresholds);
             NvmConfig::setThresholds(&thresholds);
         }
     }
@@ -509,6 +515,32 @@ void inlineStateChange(eInlineFanSpeed speed)
 {
     printf("inline state change\n");
     lcdController->updateFanStatus(speed, 0);
+
+    sTempThresholds_t thresholds;
+    NvmConfig::getThresholds(&thresholds);
+
+    char speedText[4] = {0};
+    switch (speed) {
+    case INLINE_OFF:
+        memcpy(speedText, "OFF", 3);
+        break;
+    case INLINE_LOW_SPEED:
+        memcpy(speedText, "LOW", 3);
+        break;
+    case INLINE_HIGH_SPEED:
+        memcpy(speedText, "HIGH", 4);
+        break;
+        default:
+            break;
+    }
+
+    printf("sent notify\n");
+    char buffer[64] = {0};
+    snprintf(buffer, 64,
+            "{\"notify\":"
+            "{\"inline\":\"%s\"}}", speedText);
+
+    MQTT_Interface::publish("up", (uint8_t*)buffer, strlen(buffer), 1);
 }
 
 static void mqttConnected(void)
@@ -555,6 +587,20 @@ void sendTrendFrame(int temperature, int humidity, int light)
     MQTT_Interface::publish("up", (uint8_t*)buffer, strlen(buffer));
 }
 
+void alarmCallback(uint8_t state, uint8_t th, int limit, int value)
+{
+    if(state == THRESHOLD_STATE_ALARM)
+    {
+        INFO_TRACE(RED_B("ALARM"),"%s\tvalue: %d\talarm: %d\n", ((th == THRESHOLD_HUMIDITY) ? "Humidity" : "Temperature"), value, limit);
+    }
+
+    if(state == THRESHOLD_STATE_CLEAR)
+    {
+        INFO_TRACE(GREEN("CLEARED"), "%s\tvalue: %d\talarm: %d\n", (th == THRESHOLD_HUMIDITY ? "Humidity" : "Temperature"), value, limit);
+    }
+
+}
+
 int sampleLight()
 {
     for(int i=0; i < 16; i++)
@@ -577,6 +623,8 @@ void runTrend()
         sample_dht22(temp, humid);
 
         inlineController.updateTemperature((int)temp/10.0);
+        thresholdCheck->run(temp, humid);
+
 
         int light = sampleLight();
 
@@ -584,7 +632,9 @@ void runTrend()
 
         lcdController->updateStaticValues(temp, humid, light);
 
-        sendTrendFrame(temp, humid, light);
+        printf("trendy\n");
+        if(wifiState == WIFI_STATUS_CONNECTED && MQTT_Interface::isConnected())
+            sendTrendFrame(temp, humid, light);
 
         trendTick = tickTimer.read_ms() + TREND_DUTY_MS;
     }
@@ -593,10 +643,8 @@ void runTrend()
 void wifiConnectedCallback(MQTTNetwork* network, MQTT::Client<MQTTNetwork, Countdown> *client)
 {
     MQTT_Interface::init(network, client);
-
     sNetworkCredentials_t wifiCredentials;
     NvmConfig::getWifiCredentials(&wifiCredentials);
-
     MQTT_Interface::connect(wifiCredentials.mqtt_ip, wifiCredentials.mqtt_port);
     MQTT_Interface::setConnectedCallback(mqttConnected);
 }
@@ -607,10 +655,19 @@ int main()
     INFO_TRACE("Version", "0x%08X\n", MBED_CONF_APP_VERSION);
     INFO_TRACE("Build", "%s\n", SWdatetime);
 
+
 	dht22 = new DHT22(A0);
+
+
 
 	Console::init(&pc, "wi_try");
 	wait(0.2);
+
+	const uint32_t nums[32] = {0};
+	    for(int i = 0; i < 32; i++)
+	    {
+	        printf("nums[%d] = %d\n", i, (int)nums[i]);
+	    }
 
 	I2C i2cEEP(D14, D15);
 	printInfo("EEPROM");
@@ -628,8 +685,6 @@ int main()
     lcd = new LCDPCF8574(&i2cLCD, 0);
     lcdController = new LCDController(lcd);
 
-
-
     {
         char version[20];
         snprintf(version, 20, "ver:0x%08X", MBED_CONF_APP_VERSION);
@@ -638,12 +693,15 @@ int main()
         lcdController->logLine(version);
     }
 
-
     {
         sTempThresholds_t thresholds;
         NvmConfig::getThresholds(&thresholds);
         inlineController.setThresholds(&thresholds);
         inlineController.setStateChangeCallback(inlineStateChange);
+
+        thresholdCheck = new ThresholdCheck();
+        thresholdCheck->setThresholds(&thresholds);
+        thresholdCheck->setAlarmCallback(alarmCallback);
     }
 
     MQTTNetwork mqttNetwork(&wifi);
@@ -655,6 +713,8 @@ int main()
     while (1)
     {
         lcdController->logRun();
+
+        runTrend();
 
         switch (wifiState) {
         case WIFI_STATUS_CONNECTING:
@@ -686,8 +746,10 @@ int main()
                 char ip[20];
                 snprintf(ip, 20, "IP: %s", wifi.get_ip_address());
                 lcdController->logLine(ip);
+                printf("1\n");
             }
             wifiConnectedCallback(&mqttNetwork, &client);
+            printf("1.1\n");
             wifiState = WIFI_STATUS_CONNECTED;
         }
         break;
@@ -698,9 +760,6 @@ int main()
                 printf(RED("WIFI connection fail: %d\n"), wifi.get_connection_status());
                 wifiState = WIFI_STATUS_DISCONNECTED;
             }
-
-            if(MQTT_Interface::isConnected())
-                runTrend();
         }
         break;
         case WIFI_STATUS_DISCONNECTED:

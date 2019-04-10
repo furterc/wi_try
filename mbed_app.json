@@ -8,6 +8,7 @@
     "target_overrides": {
         "*": {
             "mbed-trace.enable": 0,
+            "platform.thread-stats-enabled": true,
             "platform.stdio-convert-newlines": "1",
             "platform.stdio-baud-rate": 115200
         }

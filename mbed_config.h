@@ -242,6 +242,7 @@
 #define MBED_LFS_LOOKAHEAD                                                    512                                                                                              // set by library:littlefs
 #define MBED_LFS_PROG_SIZE                                                    64                                                                                               // set by library:littlefs
 #define MBED_LFS_READ_SIZE                                                    64                                                                                               // set by library:littlefs
+#define MBED_THREAD_STATS_ENABLED                                             1                                                                                                // set by application[*]
 #define MEM_ALLOC                                                             malloc                                                                                           // set by library:mbed-trace
 #define MEM_FREE                                                              free                                                                                             // set by library:mbed-trace
 #define NSAPI_PPP_AVAILABLE                                                   0                                                                                                // set by library:lwip

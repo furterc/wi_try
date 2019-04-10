@@ -1123,6 +1123,8 @@
 								</option>
 								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.496389156" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
 									
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1554587344.79"/>
+                                    
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2CSLAVE=1"/>
@@ -1141,7 +1143,7 @@
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_MPU=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1553805845.54"/>
+                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_ASYNCH=1"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_STM32F4"/>
                                     
@@ -1222,8 +1224,6 @@
                                     <listOptionValue builtIn="false" value="TARGET_NAME=NUCLEO_F411RE"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SERIAL=1"/>
-                                    
-                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_ASYNCH=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_FLASH=1"/>
                                     
@@ -1776,6 +1776,8 @@
 								</option>
 								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.1395532696" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
 									
+                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1554587344.79"/>
+                                    
                                     <listOptionValue builtIn="false" value="__MBED__=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_I2CSLAVE=1"/>
@@ -1794,7 +1796,7 @@
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_MPU=1"/>
                                     
-                                    <listOptionValue builtIn="false" value="MBED_BUILD_TIMESTAMP=1553805845.54"/>
+                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_ASYNCH=1"/>
                                     
                                     <listOptionValue builtIn="false" value="TARGET_STM32F4"/>
                                     
@@ -1875,8 +1877,6 @@
                                     <listOptionValue builtIn="false" value="TARGET_NAME=NUCLEO_F411RE"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_SERIAL=1"/>
-                                    
-                                    <listOptionValue builtIn="false" value="DEVICE_SERIAL_ASYNCH=1"/>
                                     
                                     <listOptionValue builtIn="false" value="DEVICE_FLASH=1"/>
                                     

@@ -155,7 +155,7 @@ void MQTT_Interface::run(MQTT_Interface *instance)
 
 		        MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
 		        data.MQTTVersion = 3;
-		        data.clientID.cstring = (char*)"mbed-sample";
+		        data.clientID.cstring = (char*)"mbed";
 		        //      data.username.cstring = "testuser";
 		        //      data.password.cstring = "testpassword";
 

@@ -31,8 +31,8 @@ typedef struct {
     int inlineLowOn;
     int inlineHighOff;
     int inlineHighOn;
-    int tempAlarm;
-    int humidAlarm;
+    int alarmTemperature;
+    int alarmHumidity;
 } sTempThresholds_t;
 
 class NvmConfig

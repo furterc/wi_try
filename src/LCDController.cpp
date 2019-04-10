@@ -98,7 +98,7 @@ void LCDController::logUpdateDisplay()
 void LCDController::updateFanStatus(eInlineFanSpeed fanSpeed, uint8_t override)
 {
     //1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-    //I N L I N E : A U T  O     H  I  G  H
+    //I N L I N E : A U T  O       q H  I  G  H
     char staticLine[20] = {0};
 
     char speed[5] = {0};

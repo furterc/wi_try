@@ -52,8 +52,11 @@ int InlineController::updateTemperature(int temp)
     if(temp > mThresholds.inlineHighOn)
     {
         speed =  INLINE_HIGH_SPEED;
-        if(stateChange)
-            stateChange(speed);
+        if(getSpeed() != speed)
+        {
+            if(stateChange)
+                stateChange(speed);
+        }
         return updateFanSpeed(speed);
     }
 
@@ -63,16 +66,22 @@ int InlineController::updateTemperature(int temp)
             return 0;
 
         speed =  INLINE_LOW_SPEED;
-        if(stateChange)
-            stateChange(speed);
+        if(getSpeed() != speed)
+        {
+            if(stateChange)
+                stateChange(speed);
+        }
         return updateFanSpeed(speed);
     }
 
     if(temp > mThresholds.inlineHighOff)
     {
         speed =  INLINE_OFF;
-        if(stateChange)
-            stateChange(speed);
+        if(getSpeed() != speed)
+        {
+            if(stateChange)
+                stateChange(speed);
+        }
         return updateFanSpeed(speed);
     }
 

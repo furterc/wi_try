@@ -388,8 +388,8 @@ void NvmConfig::alarmThresholdConfig(int argc,char *argv[])
     if(argc == 1)
     {
         printf(CYAN("Alarm Thresholds\n"));
-        printf("Temperature  : %d\n", thresholds.tempAlarm);
-        printf("Humidity     : %d\n", thresholds.humidAlarm);
+        printf("Temperature  : %d\n", thresholds.alarmTemperature);
+        printf("Humidity     : %d\n", thresholds.alarmHumidity);
 
         return;
     }
@@ -410,12 +410,12 @@ void NvmConfig::alarmThresholdConfig(int argc,char *argv[])
         return;
     }
 
-    thresholds.tempAlarm = alarmTemperature;
-    thresholds.humidAlarm = alarmHumidity;
+    thresholds.alarmTemperature = alarmTemperature;
+    thresholds.alarmHumidity = alarmHumidity;
 
     printf(GREEN("Set Alarm Thresholds\n"));
-    printf("Temperature  : %d\n", thresholds.tempAlarm);
-    printf("Humidity     : %d\n", thresholds.humidAlarm);
+    printf("Temperature  : %d\n", thresholds.alarmTemperature);
+    printf("Humidity     : %d\n", thresholds.alarmHumidity);
 
     NvmConfig::setThresholds(&thresholds);
 }
